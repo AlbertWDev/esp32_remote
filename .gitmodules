@@ -1,0 +1,4 @@
+[submodule "components/wifimanager"]
+	path = components/wifimanager
+	url = https://github.com/AlbertWDev/wifimanager.git
+	branch = master
