@@ -1,0 +1,9 @@
+#pragma once
+
+#include <esp_https_server.h>
+#include <esp_err.h>
+#include "cJSON.h"
+
+#include <esp_system.h>
+
+esp_err_t _rmgmt_get_system_info(httpd_req_t *req);
