@@ -8,6 +8,7 @@ ___
 - **SYSTEM**
     - `System.Info`
     - `System.Partitions`
+<!--    - `System.OTA` -->
 <!--    - `System.Tasks` -->
 - **NETWORK**
     - **WIFI**
@@ -36,12 +37,11 @@ ___
 | **`chip_ble`**       | Boolean | Chip has Bluetooth LE             |
 | **`idf_ver`**        | String  | IDF version as in 'git describe'  |
 | **`free_heap`**      | Integer | Size of available heap (in bytes) |
-|                      |         |                                   |
+
 #### Endpoints
 | URI                              | HTTP method | Description          |
 |----------------------------------|-------------|----------------------|
-| `/v1/system/info/`                | **GET**     | Retrieve system info |
-|                                  |             |                      |
+| `/v1/system/info/`               | **GET**     | Retrieve system info |
 
 
 
@@ -56,15 +56,14 @@ ___
 | **`address`**   | Integer | Starting address of the partition in flash                |
 | **`size`**      | Integer | Size of the partition (in bytes)                          |
 | **`encrypted`** | Boolean | Partition is encrypted                                    |
-|                 |         |                                                           |
+
 #### Endpoints
-| URI                             | HTTP method | Description                |
-|---------------------------------|-------------|----------------------------|
-| `/v1/system/partitions/`        | **GET**     | Retrieve partitions list   |
-| `/v1/system/partitions/<label>` | **GET**     | Retrieve partition details |
-| `/v1/system/partitions/<label>` | **PUT**     | Update partition content   |
-| `/v1/system/partitions/<label>` | **DELETE**  | Erase partition content    |
-|                                 |             |                            |
+| URI                             | HTTP method | Description                      |
+|---------------------------------|-------------|----------------------------------|
+| `/v1/system/partitions/`        | **GET**     | Retrieve partitions list         |
+| `/v1/system/partitions/<label>` | **GET**     | Retrieve partition details       |
+| `/v1/system/partitions/<label>` | **PUT**     | Update partition content via OTA ![](https://img.shields.io/badge/-WIP-blue) |
+| `/v1/system/partitions/<label>` | **DELETE**  | Erase partition content ![](https://img.shields.io/badge/-WIP-blue) |
 
 
 
@@ -76,16 +75,15 @@ ___
 | **`ssid`**      | String  | SSID of the stored network     |
 | **`password`**  | String  | Password of the stored network |
 | **`score`**     | Integer | Network score (times used)     |
-|                 |         |                                |
+
 #### Endpoints
 | URI                               | HTTP method | Description                        |
 |-----------------------------------|-------------|------------------------------------|
 | `/v1/network/wifi/storage/`       | **GET**     | Retrieve all stored WiFi networks  |
 | `/v1/network/wifi/storage/<SSID>` | **GET**     | Retrieve stored WiFi network       |
 | `/v1/network/wifi/storage/`       | **POST**    | Store new WiFi network credentials |
-| `/v1/network/wifi/storage/<SSID>` | **PUT**     | Update WiFi network credentials    |
+| `/v1/network/wifi/storage/<SSID>` | **PUT**     | Update WiFi network credentials ![](https://img.shields.io/badge/-WIP-blue) |
 | `/v1/network/wifi/storage/<SSID>` | **DELETE**  | Remove a stored WiFi network       |
-|                                   |             |                                    |
 
 
 
@@ -110,13 +108,12 @@ ___
 | **`ap.netmask`**  | String | (AP interface) Network mask                              |
 | **`ap.gw`**       | String | (AP interface) Gateway IP address                        |
 | **`ap.ssid`**     | String | SSID of the board Access Point                           |
-|                   |        |                                                          |
+
 #### Endpoints
 | URI                        | HTTP method | Description                   |
 |----------------------------|-------------|-------------------------------|
 | `/v1/network/wifi/status/` | **GET**     | Get board WiFi network status |
-| `/v1/network/wifi/status/` | **PUT**     | Update WiFi network status<br><ul><li>Start/Stop AP</li><li>Change STA connected network</li><li>Change AP settings</li></ul> |
-|                            |             |                               |
+| `/v1/network/wifi/status/` | **PUT**     | Update WiFi network status ![](https://img.shields.io/badge/-WIP-blue)<br><ul><li>Start/Stop AP</li><li>Change STA connected network</li><li>Change AP settings</li></ul> |
 
 
 
@@ -126,15 +123,14 @@ ___
 | Attribute     | Type   | Description                    |
 |---------------|--------|--------------------------------|
 | **`-`** | | |
-|               |        |                                |
+
 #### Endpoints
 | URI                                 | HTTP method | Description                                   |
 |-------------------------------------|-------------|-----------------------------------------------|
-| `/v1/storage/`                      | **GET**     | List of mount points                          |
+| `/v1/storage/`                      | **GET**     | List of mount points ![](https://img.shields.io/badge/-WIP-blue) |
 | `/v1/storage/<mount_point>/<node>*` | **GET**     | List directory or get file                    |
 | `/v1/storage/<mount_point>/<node>*` | **POST**    | Create directory or file                      |
-| `/v1/storage/<mount_point>/<node>*` | **PUT**     | Rename directory, file or change file content |
+| `/v1/storage/<mount_point>/<node>*` | **PUT**     | Rename directory, file or change file content ![](https://img.shields.io/badge/-WIP-blue) |
 | `/v1/storage/<mount_point>/<node>*` | **DELETE**  | Delete directory or file                      |
-|                                     |             |                                               |
 
 
