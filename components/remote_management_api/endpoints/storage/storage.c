@@ -40,15 +40,33 @@ cJSON* _get_dir_entry_json(struct dirent* entry) {
     return entry_json;
 }
 
-cJSON* _list_dir_json(char* path) {
+cJSON* _list_dir_json(char* path, size_t path_len) {
     DIR* dir = opendir(path);
     if (!dir) return NULL;
 
     cJSON *dir_list = cJSON_CreateArray();
-
+    if(dir_list == NULL) return NULL;
+    
+    char filepath[RMGMT_STORAGE_NODE_NAME_MAX_LENGTH];
     struct dirent *entry;
+    struct stat filestat;
     while ((entry = readdir(dir)) != NULL) {
         cJSON* entry_json = _get_dir_entry_json(entry);
+
+        // Get full file path
+        sprintf(filepath, path);
+        if(path[path_len-1] != '/') strcat(filepath, "/");
+        strcat(filepath, entry->d_name);
+
+        // Add extra info
+        if(stat(filepath, &filestat) == 0) {
+            cJSON_AddNumberToObject(entry_json, "mode", filestat.st_mode);
+            //cJSON_AddNumberToObject(entry_json, "created", filestat.st_ctime);1
+            //cJSON_AddNumberToObject(entry_json, "accessed", filestat.st_atime);
+            cJSON_AddNumberToObject(entry_json, "modified", filestat.st_mtime);
+            cJSON_AddNumberToObject(entry_json, "size", filestat.st_size);
+        }
+        
         cJSON_AddItemToArray(dir_list, entry_json);
     }
     closedir(dir);
@@ -67,9 +85,9 @@ esp_err_t _rmgmt_get_storage_node(httpd_req_t *req) {
 
     size_t node_name_len = strlen(node_name);
     if(node_name[node_name_len-1] == '/') { // Directory
-        if(node_name_len > 1) node_name[node_name_len-1] = '\0';
+        if(node_name_len > 1) node_name[--node_name_len] = '\0';
 
-        cJSON* dir_json = _list_dir_json(node_name);
+        cJSON* dir_json = _list_dir_json(node_name, node_name_len);
         if(dir_json == NULL) {
             httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "Directory not found ot not accessible");
             return ESP_OK;

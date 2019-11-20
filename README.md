@@ -120,17 +120,27 @@ ___
 ## **`Storage`**
 > Storage (directories & files)
 
-| Attribute     | Type   | Description                    |
-|---------------|--------|--------------------------------|
-| **`-`** | | |
+#### Directory entry
+| Attribute      | Type    | Description                                   |
+|----------------|---------|-----------------------------------------------|
+| **`name`**     | String  | Directory entry name                          |
+| **`type`**     | String  | Entry type<br><small>`DIR | FILE`</small>     |
+| **`mode`**     | Integer | UNIX-like file mode                           |
+| **`modified`** | Long    | Last modified time (UNIX timestamp)           |
+| **`size`**     | Integer | File size in bytes. 0 if entry is a directory |
 
 #### Endpoints
-| URI                                 | HTTP method | Description                                   |
-|-------------------------------------|-------------|-----------------------------------------------|
-| `/v1/storage/`                      | **GET**     | List of mount points ![](https://img.shields.io/badge/-WIP-blue) |
-| `/v1/storage/<mount_point>/<node>*` | **GET**     | List directory or get file                    |
-| `/v1/storage/<mount_point>/<node>*` | **POST**    | Create directory or file                      |
-| `/v1/storage/<mount_point>/<node>*` | **PUT**     | Rename directory, file or change file content ![](https://img.shields.io/badge/-WIP-blue) |
-| `/v1/storage/<mount_point>/<node>*` | **DELETE**  | Delete directory or file                      |
+| URI                                 | HTTP method | Description       |
+|-------------------------------------|-------------|-------------------|
+| `/v1/storage/<mount_point>/<node>*/` | **GET**     | List directory   |
+| `/v1/storage/<mount_point>/<node>*`  | **GET**     | Get file         |
+| `/v1/storage/<mount_point>/<node>*/` | **POST**    | Create directory |
+| `/v1/storage/<mount_point>/<node>*`  | **POST**    | Create  file     |
+| `/v1/storage/<mount_point>/<node>*/` | **DELETE**  | Delete directory |
+| `/v1/storage/<mount_point>/<node>*`  | **DELETE**  | Delete file      |
 
+<!--
+| `/v1/storage/`                       | **GET**     | List of mount points ![](https://img.shields.io/badge/-WIP-blue) |
+| `/v1/storage/<mount_point>/<node>*`  | **PUT**     | Rename directory, file or change file content ![](https://img.shields.io/badge/-WIP-blue) |
+-->
 

@@ -6,6 +6,9 @@
 
 #include <esp_vfs.h>
 #include <fcntl.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include <esp_log.h>
 
