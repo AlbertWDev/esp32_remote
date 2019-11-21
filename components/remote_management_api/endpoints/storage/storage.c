@@ -76,6 +76,7 @@ cJSON* _list_dir_json(char* path, size_t path_len) {
 esp_err_t _rmgmt_get_storage_node(httpd_req_t *req) {
     esp_err_t ret;    
     
+    // Get node path from URI
     char node_name[RMGMT_STORAGE_NODE_NAME_MAX_LENGTH];
     ret = _get_node_name_from_uri(req->uri, node_name, RMGMT_STORAGE_NODE_NAME_MAX_LENGTH);
     if(ret != ESP_OK) {
@@ -100,8 +101,7 @@ esp_err_t _rmgmt_get_storage_node(httpd_req_t *req) {
 
         free((void *)json);
         cJSON_Delete(dir_json);
-    } else {
-        
+    } else { 
         int fd = open(node_name, O_RDONLY, 0);
         if (fd == -1) {
             httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "File not found or not accessible");
@@ -127,11 +127,10 @@ esp_err_t _rmgmt_get_storage_node(httpd_req_t *req) {
     return ESP_OK;
 }
 
-esp_err_t _rmgmt_post_storage_node(httpd_req_t *req) {
-    esp_err_t ret;
-    //httpd_resp_set_type(req, "application/json");
+esp_err_t _rmgmt_put_storage_node(httpd_req_t *req) {
+    esp_err_t ret;    
     
-    
+    // Get node path from URI
     char node_name[RMGMT_STORAGE_NODE_NAME_MAX_LENGTH];
     ret = _get_node_name_from_uri(req->uri, node_name, RMGMT_STORAGE_NODE_NAME_MAX_LENGTH);
     if(ret != ESP_OK) {
@@ -141,21 +140,21 @@ esp_err_t _rmgmt_post_storage_node(httpd_req_t *req) {
 
     size_t node_name_len = strlen(node_name);
     if(node_name[node_name_len-1] == '/') { // Directory
-        node_name[node_name_len-1] = '\0';
+        node_name[node_name_len-1] = '\0';  // Remove trailing slash
 
-        ESP_LOGI("RMGMT_STORAGE", "Creating dir: \"%s\"", node_name);
         if(mkdir(node_name, 0755) == 0)
             httpd_resp_sendstr(req, "Directory created");
         else
             httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Couldn't create directory");
     } else {
-        ESP_LOGI("RMGMT_STORAGE", "Creating file: \"%s\"", node_name);
+        // Open file in write mode (overwrite if existed)
         FILE* f = fopen(node_name, "w");
         if (f == NULL) {
             httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Can't create file");
             return ESP_OK;
         }
 
+        // Write file content in chunks as received from client
         char* chunk = (char*)malloc(FILE_BUFFER_SIZE);
         int received, total_received = 0;
         while(total_received < req->content_len) {
@@ -178,20 +177,10 @@ esp_err_t _rmgmt_post_storage_node(httpd_req_t *req) {
 
         httpd_resp_sendstr(req, "File created");
     }
-
-    /*cJSON *root = cJSON_CreateObject();
-
-
-    const char *json = cJSON_Print(root);
-    httpd_resp_sendstr(req, json);
-
-    free((void *)json);
-    cJSON_Delete(root);*/
-
     return ESP_OK;
 }
 
-esp_err_t _rmgmt_put_storage_node(httpd_req_t *req) {
+esp_err_t _rmgmt_post_storage_node(httpd_req_t *req) {
     esp_err_t ret;
     httpd_resp_set_type(req, "application/json");
     cJSON *root = cJSON_CreateObject();
@@ -209,8 +198,8 @@ esp_err_t _rmgmt_put_storage_node(httpd_req_t *req) {
 
 esp_err_t _rmgmt_delete_storage_node(httpd_req_t *req) {
     esp_err_t ret;
-    //httpd_resp_set_type(req, "application/json");
     
+    // Get node path from URI
     char node_name[RMGMT_STORAGE_NODE_NAME_MAX_LENGTH];
     ret = _get_node_name_from_uri(req->uri, node_name, RMGMT_STORAGE_NODE_NAME_MAX_LENGTH);
     if(ret != ESP_OK) {
@@ -220,31 +209,17 @@ esp_err_t _rmgmt_delete_storage_node(httpd_req_t *req) {
 
     size_t node_name_len = strlen(node_name);
     if(node_name[node_name_len-1] == '/') { // Directory
-        node_name[node_name_len-1] = '\0';
+        node_name[node_name_len-1] = '\0';  // Remove trailing slash
 
-        ESP_LOGI("RMGMT_STORAGE", "Deleting dir: \"%s\"", node_name);
         if(rmdir(node_name) == 0)
             httpd_resp_sendstr(req, "Directory deleted");
         else
             httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Couldn't delete directory");
     } else {
-        ESP_LOGI("RMGMT_STORAGE", "Deleting file: \"%s\"", node_name);
         if(remove(node_name) == 0)
             httpd_resp_sendstr(req, "File deleted");
         else
             httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Couldn't delete file"); 
     }
-    
-    
-    /*cJSON *root = cJSON_CreateObject();
-    
-
-
-    const char *json = cJSON_Print(root);
-    httpd_resp_sendstr(req, json);
-
-    free((void *)json);
-    cJSON_Delete(root);*/
-
     return ESP_OK;
 }
