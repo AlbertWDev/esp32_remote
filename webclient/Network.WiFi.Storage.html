@@ -1,0 +1,286 @@
+<!--  CONTENT -->
+    <div class="mdl-grid">
+        <div class="mdl-layout-spacer"></div>
+        <table id="network-wifi-storage-list" class="mdl-data-table mdl-js-data-table mdl-cell mdl-cell--4-col mdl-shadow--2dp">
+            <thead>
+                <tr>
+                    <th class="mdl-data-table__cell--non-numeric">SSID</th>
+                    <th class="mdl-data-table__cell--non-numeric">Password</th>
+                    <th>Score</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- ko foreach: networks -->
+                <tr>
+                    <td class="mdl-data-table__cell--non-numeric">
+                        <span data-bind="text: ssid"></span>
+                    </td>
+                    <td class="mdl-data-table__cell--non-numeric">
+                        <span data-bind="text: password"></span>
+                    </td>
+                    <td>
+                        <span data-bind="text: score"></span>
+                    </td>
+                    <td>
+                        <button data-bind="click: $parent.editAction" class="mdl-button mdl-js-button mdl-button--icon">
+                            <i class="material-icons">edit</i>
+                        </button>
+                        <button data-bind="click: $parent.deleteAction" class="mdl-button mdl-js-button mdl-button--icon">
+                            <i class="material-icons">delete</i>
+                        </button>
+                    </td>
+                </tr>
+                <!-- /ko -->
+            </tbody>
+
+            
+        </table>
+        <div class="mdl-layout-spacer"></div>
+    </div>
+
+    <button onclick="network_wifi_storage.addAction()" style="position: fixed; bottom: 20px; right: 20px;" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored">
+        <i class="material-icons">add</i>
+    </button>
+    
+
+    <!-- ADD NETWORK DIALOG -->
+    <dialog id="network-wifi-storage-add" class="mdl-dialog">
+        <h4 class="mdl-dialog__title">Add Network</h4>
+        <div class="mdl-dialog__content">
+            <form action="#">
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                    <input data-bind="value: ssid" id="add-ssid" type="text" class="mdl-textfield__input">
+                    <label class="mdl-textfield__label" for="add-ssid">SSID</label>
+                </div>
+
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                    <input data-bind="value: password" id="add-password" type="text" class="mdl-textfield__input">
+                    <label class="mdl-textfield__label" for="add-password">Password</label>
+                </div>
+
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                    <input data-bind="value: score" id="add-score" type="text" pattern="[0-9]*" value="0" class="mdl-textfield__input">
+                    <label class="mdl-textfield__label" for="add-score">Score</label>
+                    <span class="mdl-textfield__error">Score must be a number</span>
+                </div>
+            </form>                        
+        </div>
+        <div class="mdl-dialog__actions">
+            <button data-bind="click: addAction" id="add-network" type="button" class="mdl-button mdl-button--colored" disabled>Add</button>
+            <button onclick="$('#network-wifi-storage-add')[0].close();" type="button" class="mdl-button">Cancel</button>
+        </div>
+    </dialog>
+
+    <!-- EDIT NETWORK DIALOG -->
+    <dialog id="network-wifi-storage-edit" class="mdl-dialog">
+        <h4 class="mdl-dialog__title">Edit Network</h4>
+        <div class="mdl-dialog__content">
+            <form action="#">
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                    <input disabled data-bind="value: ssid" id="edit-ssid" type="text" class="mdl-textfield__input">
+                    <label class="mdl-textfield__label" for="edit-ssid">SSID</label>
+                </div>
+
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                    <input data-bind="value: password" id="edit-password" type="text" class="mdl-textfield__input">
+                    <label class="mdl-textfield__label" for="edit-password">Password</label>
+                </div>
+
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                    <input data-bind="value: score" id="edit-score" type="text" pattern="[0-9]*" value="0" class="mdl-textfield__input">
+                    <label class="mdl-textfield__label" for="edit-score">Score</label>
+                    <span class="mdl-textfield__error">Score must be a number</span>
+                </div>
+            </form>                        
+        </div>
+        <div class="mdl-dialog__actions">
+            <button data-bind="click: editAction" id="edit-network" type="button" class="mdl-button mdl-button--colored">Save</button>
+            <button onclick="$('#network-wifi-storage-edit')[0].close();" type="button" class="mdl-button">Cancel</button>
+        </div>
+    </dialog>
+
+    <!-- DELETE NETWORK DIALOG -->
+    <dialog id="network-wifi-storage-delete" class="mdl-dialog">
+        <h1 class="mdl-dialog__title">Delete Network</h1>
+        <div class="mdl-dialog__content">
+            <p>Are you sure you want to delete <span data-bind="text: ssid"></span>?</p>                       
+        </div>
+        <div class="mdl-dialog__actions">
+            <button data-bind="click: deleteAction" id="delete-network" type="button" class="mdl-button mdl-color-text--red">Delete</button>
+            <button onclick="$('#network-wifi-storage-delete')[0].close();" type="button" class="mdl-button">Cancel</button>
+        </div>
+    </dialog>
+<!--  /CONTENT -->
+
+
+<script type="text/javascript">
+    var NetworkWifiStorage = class {
+        constructor() {
+            this.endpoint = '/network/wifi/storage';
+            this.networks = ko.observableArray();
+
+            setOnConnectCallback(() => this.refresh());
+            this.refresh();
+        }
+
+        refresh() {
+            this.networks.removeAll();
+            if(!connection_manager.isConnected()) return;
+            api_request(this.endpoint, 'GET').done((network_list) => {
+                network_list.forEach(network => {
+                    this.networks.push({
+                        ssid: ko.observable(network.ssid),
+                        password: ko.observable(network.password),
+                        score: ko.observable(network.score)
+                    });
+                });
+            });
+        }
+        create(network) {
+            api_request(this.endpoint, 'POST', network).done((network) => {
+                this.networks.push({
+                    ssid: ko.observable(network.ssid),
+                    password: ko.observable(network.password),
+                    score: ko.observable(network.score)
+                });
+
+                // Network list exceeds maximum, refresh list
+                if(this.networks.length > 5) this.refresh();
+            });
+        }
+        update(old_network, new_network) {
+            api_request(`${this.endpoint}/${old_network.ssid()}`, 'PUT', new_network).done((network) => {
+                this.networks.replace(old_network, {
+                    ssid: ko.observable(network.ssid),
+                    password: ko.observable(network.password),
+                    score: ko.observable(network.score)
+                });
+            });
+        }
+        delete(network) {
+            api_request(`${this.endpoint}/${network.ssid()}`, 'DELETE').done((deleted_network) => {
+                this.networks.remove(network);
+            });
+        }
+
+        addAction() {
+            $('#network-wifi-storage-add')[0].showModal();
+            // Required to initialize textfields as MaterialTextField objects since this will be loaded dynamically
+            componentHandler.upgradeElements($('.mdl-textfield').get());
+        }
+
+        editAction(network) {
+            network_wifi_storage_edit.updateContent(network);
+            $('#network-wifi-storage-edit')[0].showModal();
+        }
+
+        deleteAction(network) {
+            network_wifi_storage_delete.updateContent(network);
+            $('#network-wifi-storage-delete')[0].showModal();
+        }
+    }
+    
+    var NetworkWifiStorage_AddDialog = class {
+        constructor() {
+            var dialog = $('#network-wifi-storage-add')[0];
+            if(!dialog.showModal) dialogPolyfill.registerDialog(dialog);
+
+            this.ssid = ko.observable();
+            this.password = ko.observable();
+            this.score = ko.observable(0);
+
+            // Enable/Disable ADD button
+            var ssidInput = $('#network-wifi-storage-add #add-ssid')[0];
+            ssidInput.addEventListener("keyup", (e) => {
+                $('#network-wifi-storage-add #add-network').prop('disabled', ssidInput.value == null || ssidInput.value.trim() == '');
+            });
+        }
+
+        addAction() {
+            // Close dialog
+            $('#network-wifi-storage-add')[0].close();
+
+            // Create network request
+            network_wifi_storage.create({
+                ssid: this.ssid(),
+                password: this.password(),
+                score: this.score()
+            });
+
+            // Clean dialog fields
+            this.ssid("");
+            this.password("");
+            this.score(0);
+            $('#network-wifi-storage-add #add-network').prop('disabled', true);
+        }
+    }
+
+    var NetworkWifiStorage_EditDialog = class {
+        constructor() {
+            var dialog = $('#network-wifi-storage-edit')[0];
+            if(!dialog.showModal) dialogPolyfill.registerDialog(dialog);
+
+            this.ssid = ko.observable();
+            this.password = ko.observable();
+            this.score = ko.observable(0);
+        }
+
+        updateContent(network) {
+            // Required to initialize textfields as MaterialTextField objects since this will be loaded dynamically
+            componentHandler.upgradeElements($('.mdl-textfield').get());
+
+            this.network = network;
+            $('#network-wifi-storage-edit #edit-ssid')[0].parentElement.MaterialTextfield.change(network.ssid());
+            this.ssid(network.ssid());
+            $('#network-wifi-storage-edit #edit-password')[0].parentElement.MaterialTextfield.change(network.password());
+            this.password(network.password());
+            $('#network-wifi-storage-edit #edit-score')[0].parentElement.MaterialTextfield.change(network.score());
+            this.score(network.score());
+        };
+        
+        editAction() {
+            $('#network-wifi-storage-edit')[0].close();
+            network_wifi_storage.update(this.network, {
+                ssid: this.ssid(),
+                password: this.password(),
+                score: this.score()
+            });
+        }
+    }
+
+    var NetworkWifiStorage_DeleteDialog = class {
+        constructor() {
+            var dialog = $('#network-wifi-storage-delete')[0];
+            if(!dialog.showModal) dialogPolyfill.registerDialog(dialog);
+
+            this.ssid = ko.observable();
+        }
+
+        updateContent(network) {
+            this.network = network;
+            this.ssid(network.ssid());
+        };
+        
+        deleteAction() {
+            $('#network-wifi-storage-delete')[0].close();
+            network_wifi_storage.delete(this.network);
+        }
+    }
+
+
+    // Network.WiFi.Storage
+    var network_wifi_storage = new NetworkWifiStorage();
+    ko.applyBindings(network_wifi_storage, $('#network-wifi-storage-list')[0]);
+
+    // Network.WiFi.Storage - ADD
+    ko.applyBindings(new NetworkWifiStorage_AddDialog(), $('#network-wifi-storage-add')[0]);
+
+    // Network.WiFi.Storage - EDIT
+    var network_wifi_storage_edit = new NetworkWifiStorage_EditDialog();
+    ko.applyBindings(network_wifi_storage_edit, $('#network-wifi-storage-edit')[0]);
+
+    // Network.WiFi.Storage - DELETE
+    var network_wifi_storage_delete = new NetworkWifiStorage_DeleteDialog();
+    ko.applyBindings(network_wifi_storage_delete, $('#network-wifi-storage-delete')[0]);
+</script>

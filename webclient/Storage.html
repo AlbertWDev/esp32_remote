@@ -1,0 +1,368 @@
+<!--  CONTENT -->
+    <style>
+        .full-width {
+            width: 100%;
+        }
+        .storage-header {
+            width: 100%;
+            padding: 4px;
+            border-spacing: 0;
+        }
+        .storage-header-icon {
+            font-size: 18px;
+        }
+        .storage-header-button {
+            width: 24px;
+            height: 24px;
+            min-width: initial;
+            margin: 0 1px;
+        }
+        #storage-header-menu-button {
+            margin-right: 10px;
+        }
+        .storage-header-menu {
+            display: flex;
+            position: relative;
+            flex-direction: row;
+            align-items: center;
+        }
+        .storage-path {
+            margin: 0 2px;
+            padding: 0px 4px;
+
+            border: 1px solid #DDDDDD;
+            border-radius: 2px;
+        }
+        .storage-path > span {
+            font-family: monospace;
+            font-size: small;
+        }
+        .storage-path-dir {
+            font-weight: normal;
+        }
+        .storage-path-dir:hover {
+            font-weight: bold;
+        }
+        #storage-list-container {
+            overflow-x: auto;
+        }
+        .storage-list-node-mode {
+            font-family: monospace;
+        }
+        .storage-list-node-icon {
+            font-size: 18px;
+        }
+        #storage-summary {
+            padding: 3px;
+            font-size: small;
+        }
+    </style>
+    <div id="storage-container" class="mdl-shadow--2dp" style="height:100%; display: flex;flex-direction: column;">
+        <!--
+        <div class="mdl-card__title">
+            <h1 class="mdl-card__title-text">SPIFFS</h1> 
+        </div>
+        -->
+        <table class="storage-header mdl-card__subtitle" cellspacing="0">
+            <tr>
+                <td>
+                    <button id="storage-moveup-button" class="storage-header-button mdl-button mdl-js-button mdl-button--icon" disabled>
+                        <i data-bind="click: pathUpAction" class="storage-header-icon material-icons">arrow_upward</i>
+                    </button>
+                </td>
+                <td>
+                    <button class="storage-header-button mdl-button mdl-js-button mdl-button--icon">
+                        <i data-bind="click: refresh" class="storage-header-icon material-icons">refresh</i>
+                    </button>
+                </td>
+                <td class="full-width">
+                    <div class="storage-path">
+                        <span data-bind="click: () => pathClickAction('')" class="storage-path-dir">board:</span><!--
+                        --><!-- ko foreach: currentPath --><!--
+                        --><span data-bind="text: $data, click: $root.pathClickAction" class="storage-path-dir"></span><span>/</span><!--
+                        --><!-- /ko -->
+                    </div>
+                </td>
+                <td class="storage-header-menu">
+                    <button id="storage-header-menu-button" class="storage-header-button mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon">
+                        <i class="material-icons storage-header-icon" role="presentation">more_vert</i>
+                    </button>
+                    <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="storage-header-menu-button">
+                        <li class="mdl-menu__item"><i class="material-icons">cloud_download</i>Download folder</li>
+                    </ul>
+                </td>
+            </tr>
+        </table>
+
+        <div id="storage-list-container" class="scrollable" style="flex: 1; height:100%;">
+            <table id="storage-list" class="mdl-data-table mdl-js-data-table full-width">
+                <thead>
+                    <tr>
+                        <th style="width: 1px;"></th> <!-- ICON -->
+                        <th class="mdl-data-table__cell--non-numeric full-width">Name</th>
+                        <th>Size</th>
+                        <th class="mdl-data-table__cell--non-numeric">Last modification</th>
+                        <th class="mdl-data-table__cell--non-numeric">Mode</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- ko foreach: nodes -->
+                    <tr data-bind="click: $root.nodeAction">
+                        <td>
+                            <i data-bind="visible: !isDir()" class="material-icons">insert_drive_file</i>
+                            <i data-bind="visible: isDir()" class="material-icons">folder</i>
+                        </td>
+                        <td class="mdl-data-table__cell--non-numeric">
+                            <span data-bind="text: name"></span>
+                        </td>
+                        <td>
+                            <span data-bind="text: $root.sizeToReadable(size())"></span>
+                        </td>
+                        <td class="mdl-data-table__cell--non-numeric">
+                            <span data-bind="text: $root.timestampToReadable(modified())"></span>
+                        </td>
+                        <td class="mdl-data-table__cell--non-numeric">
+                            <span class="storage-list-node-mode" data-bind="text: $root.modeToReadable(mode())"></span>
+                        </td>
+                        <td>
+                            <div>
+                                <button data-bind="click: () => {}, clickBubble: false, attr: {id: 'storage-node-' + $index(), class: 'mdl-button mdl-js-button mdl-button--icon'}">
+                                    <i class="storage-list-node-icon material-icons">more_vert</i>
+                                </button>
+                                <ul data-bind="attr: {'data-mdl-for': 'storage-node-' + $index(), class: 'mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect'}">
+                                    <li data-bind="click: () => {}, clickBubble: false" class="mdl-menu__item">Download</li>
+                                    <li data-bind="click: $parent.deleteAction, clickBubble: false" class="mdl-menu__item">Download</li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    <!-- /ko -->
+                </tbody>
+            </table>
+        </div>
+        <span id="storage-summary">0 elementos, 0 bytes</span>
+        
+        <!-- Expandable FAB -->
+        <!-- jsfiddle.net/nitemarket/bg8kghL4 -->
+        <style>
+            .mdl-fab-bottom-right {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+            }
+            .mdl-button--fab-expandable,.mdl-button--fab-expandable *{z-index:99999}.mdl-button--fab-expandable.is-active>.mdl-fab-expandable--children{display:block!important}.mdl-button--fab-expandable.bottom>.mdl-fab-expandable--children{display:none;position:absolute;bottom:56px;left:8px}.mdl-button--fab-expandable.top>.mdl-fab-expandable--children{display:none;position:absolute;top:56px;left:8px}.mdl-button--fab-expandable.bottom .mdl-fab-expandable--child{position:relative;margin-bottom:16px}.mdl-button--fab-expandable.top .mdl-fab-expandable--child{position:relative;margin-top:16px}.mdl-fab-expandable--children .mdl-fab-expandable--child-label{min-width:200px}.mdl-fab-expandable--child-label>*{font-size:14px;font-weight:700;line-height:1;background-color:#fff;padding:8px;border-radius:8px}.mdl-button--fab-expandable.left .mdl-fab-expandable--child-label{position:absolute;left:48px;top:10px;text-align:left}.mdl-button--fab-expandable.right .mdl-fab-expandable--child-label{position:absolute;right:48px;top:10px;text-align:right}
+        </style>
+        <div class="mdl-fab-bottom-right mdl-button--fab-expandable bottom right" onclick="$(this).toggleClass('is-active')">
+            <button class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored">
+                <i class="material-icons">add</i>
+            </button>
+            <div class="mdl-fab-expandable--children">
+                <div class="mdl-fab-expandable--child">
+                    <button data-bind="click: uploadFileAction" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab">
+                        <i class="material-icons">cloud_upload</i>
+                    </button>
+                    <div class="mdl-fab-expandable--child-label"><label>Upload</label></div>
+                </div>
+                <div class="mdl-fab-expandable--child">
+                    <button data-bind="click: createDirAction" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab">
+                        <i class="material-icons">folder</i>
+                    </button>
+                    <div class="mdl-fab-expandable--child-label"><label>Create folder</label></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- DELETE NODE DIALOG -->
+    <dialog id="storage-delete" class="mdl-dialog">
+        <h1 class="mdl-dialog__title">Delete</h1>
+        <div class="mdl-dialog__content">
+            <p>Are you sure you want to delete the <span data-bind="text: () => isDir() ? 'folder' : 'file'"></span> <b><span data-bind="text: ssid"></span></b>?</p>                       
+        </div>
+        <div class="mdl-dialog__actions">
+            <button data-bind="click: deleteAction" id="delete-network" type="button" class="mdl-button mdl-color-text--red">Delete</button>
+            <button onclick="$('#network-wifi-storage-delete')[0].close();" type="button" class="mdl-button">Cancel</button>
+        </div>
+    </dialog>
+<!--  /CONTENT -->
+
+<script type="text/javascript">
+    if(!(typeof(componentHandler) == 'undefined')){
+        componentHandler.upgradeAllRegistered();
+    }
+    
+    var Storage = class {
+        constructor() {
+            this.endpoint = '/storage';
+            this.currentPath = ko.observableArray(['']);
+            this.nodes = ko.observableArray();
+            
+            setOnConnectCallback(() => storage.refresh());
+            this.refresh();
+        }
+        getPath = (path_array) => path_array ? path_array.join('/') + '/' : this.currentPath().join('/') + '/';
+
+        timestampToReadable(timestamp) {
+            //return new Date(timestamp * 1000).toUTCString();
+            return new Date(timestamp * 1000).toLocaleString('en-GB');
+        }
+        modeToReadable(mode) {
+            return [
+                mode & 256 ? 'r' : '-',
+                mode & 128 ? 'w' : '-',
+                mode & 64 ? 'x' : '-',
+                mode & 32 ? 'r' : '-',
+                mode & 16 ? 'w' : '-',
+                mode & 8 ? 'x' : '-',
+                mode & 4 ? 'r' : '-',
+                mode & 2 ? 'w' : '-',
+                mode & 1 ? 'x' : '-'
+            ].join("");
+        }
+        sizeToReadable(size) {
+            var units = [' bytes', ' KB', ' MB', ' GB', ' TB', ' PB', ' EB', ' ZB', ' YB'];
+            var unit_index = 0;
+            var filesize = size;
+            while(filesize >= 1024) {
+                filesize /= 1024;
+                unit_index++;
+            }
+            return Math.round(filesize * 100) / 100 + units[unit_index];
+        };
+
+        refresh() {
+            if(!connection_manager.isConnected()) return;
+            this.nodes.removeAll();
+            api_request(this.endpoint + this.getPath(), 'GET').done((node_list) => {
+                var total_size = 0;
+                node_list.forEach(node => {
+                    this.nodes.push({
+                        name: ko.observable(node.name),
+                        type: ko.observable(node.type),
+                        size: ko.observable(node.size),
+                        modified: ko.observable(node.modified),
+                        mode: ko.observable(node.mode),
+                        isDir: () => node.type == 'DIR'
+                    });
+                    total_size += node.size;
+                });
+                
+                $('#storage-summary').text(`${node_list.length} elements, ${this.sizeToReadable(total_size)}`);
+                componentHandler.upgradeDom();
+            });
+        }
+        changeLocation(new_path) {
+            if(new_path.length > 1)
+                $('#storage-moveup-button').prop("disabled", false);
+            else
+                $('#storage-moveup-button').prop("disabled", true);
+
+            if(new_path.length < 1) return;
+
+            this.currentPath.removeAll();
+            ko.utils.arrayPushAll(this.currentPath, new_path);
+            this.refresh();
+        }
+        upload(filepath, content) {
+            api_request(this.endpoint + filepath, 'PUT', content, true).done((node) => {
+                
+            });
+        }
+        mkdir(path) {
+
+        }
+
+        nodeAction = (node) => {
+            if(node.isDir()) {
+                this.changeLocation(this.currentPath().concat([node.name()]));
+                //this.currentPath.push(node.name());
+                //this.refresh();
+            } else {
+                // Create an invisible A element
+                const a = document.createElement("a");
+                a.style.display = "none";
+                document.body.appendChild(a);
+
+                a.href = connection_manager.getUri(this.endpoint + this.getPath() + node.name());
+                // Use download attribute to set set desired file name
+                a.setAttribute("download", node.name());
+
+                // Trigger the download by simulating click
+                a.click();
+
+                // Cleanup
+                window.URL.revokeObjectURL(a.href);
+                document.body.removeChild(a);
+            }
+        }
+        pathUpAction = () => {
+            this.changeLocation(this.currentPath.slice(0, -1));
+        }
+        pathClickAction = (dir_name) => {
+            this.changeLocation(this.currentPath.slice(0, this.currentPath().indexOf(dir_name)+1));
+        }
+        uploadFileAction = () => {
+            var input = document.createElement('input');
+            input.type = 'file';
+            input.onchange = e => {
+                // TODO: Upload multiple files
+
+                var file = e.target.files[0];
+
+                var reader = new FileReader();
+                reader.onload = (e) => {
+                    var data = e.target.result;
+                    console.log(data);
+                    this.upload(this.getPath() + file.name, data);
+                };
+                reader.onerror = (e) => {
+                    alert(e.target.error.name);
+                };
+                reader.readAsBinaryString(file);
+
+                
+            }
+            input.click();
+        }
+        createDirAction = () => {
+
+        }
+        delete(node) {
+            api_request(`${this.endpoint}/${network.ssid()}`, 'DELETE').done((deleted_network) => {
+                this.networks.remove(network);
+            });
+        }
+
+        deleteAction(node) {
+            storage_delete.updateContent(node);
+            $('#storage-delete')[0].showModal();
+        }
+    }
+
+    var NetworkWifiStorage_DeleteDialog = class {
+        constructor() {
+            var dialog = $('#storage-delete')[0];
+            if(!dialog.showModal) dialogPolyfill.registerDialog(dialog);
+
+            this.ssid = ko.observable();
+        }
+
+        updateContent(node) {
+            this.network = network;
+            this.ssid(network.ssid());
+        };
+        
+        deleteAction() {
+            $('#storage-delete')[0].close();
+            storage.delete(this.network);
+        }
+    }
+
+    // Storage
+    var storage = new Storage();
+    ko.applyBindings(storage, $('#storage-container')[0]);
+
+    // Storage - DELETE
+    var storage_delete = new Storate_DeleteDialog();
+    ko.applyBindings(storage_delete, $('#storage-delete')[0]);
+</script>
