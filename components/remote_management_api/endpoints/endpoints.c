@@ -22,6 +22,26 @@ const httpd_uri_t _rmgmt_endpoints[] = {
         .handler    = _rmgmt_get_system_partitions
     },
     {
+        .uri        = "/v1/system/partitions/?",
+        .method     = HTTP_PUT,
+        .handler    = _rmgmt_put_system_partitions
+    },
+    {
+        .uri        = "/v1/system/partitions/*/sha256/?",
+        .method     = HTTP_GET,
+        .handler    = _rmgmt_get_system_partitions_label_sha256
+    },
+    {
+        .uri        = "/v1/system/partitions/*/boot/?",
+        .method     = HTTP_PUT,
+        .handler    = _rmgmt_put_system_partitions_label_boot
+    },
+    {
+        .uri        = "/v1/system/partitions/*/validate/?",
+        .method     = HTTP_POST,
+        .handler    = _rmgmt_post_system_partitions_label_validate
+    },
+    {
         .uri        = "/v1/system/partitions/*",
         .method     = HTTP_GET,
         .handler    = _rmgmt_get_system_partitions_label

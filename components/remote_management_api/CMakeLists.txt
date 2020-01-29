@@ -1,6 +1,6 @@
 
 set(COMPONENT_EMBED_TXTFILES certs/cacert.pem certs/prvtkey.pem)
-set(COMPONENT_REQUIRES esp_https_server json spi_flash tcpip_adapter wifimanager)
+set(COMPONENT_REQUIRES esp_https_server json spi_flash tcpip_adapter wifimanager app_update)
 
 set(COMPONENT_ADD_INCLUDEDIRS ".")
 set(COMPONENT_SRCDIRS "." "endpoints")
