@@ -1,14 +1,20 @@
 # Esp32 Remote Management API
 
-API REST used to manage an Esp32 board remotely.
+REST API used to manage an Esp32 board remotely.
+___
+
+## WEB INTERFACE
+
+A web client is provided to interact with the API.
+
+> [Esp32 Remote Management](https://albertwdev.github.io/esp32_remote_management/client)
 
 ___
-## RESOURCES
+## API RESOURCES
 
 - **SYSTEM**
     - `System.Info`
     - `System.Partitions`
-<!--    - `System.OTA` -->
 <!--    - `System.Tasks` -->
 - **NETWORK**
     - **WIFI**
@@ -39,6 +45,7 @@ ___
 | **`free_heap`**      | Integer | Size of available heap (in bytes) |
 
 #### Endpoints
+
 | URI                              | HTTP method | Description          |
 |----------------------------------|-------------|----------------------|
 | `/v1/system/info/`               | **GET**     | Retrieve system info |
@@ -56,14 +63,21 @@ ___
 | **`address`**   | Integer | Starting address of the partition in flash                |
 | **`size`**      | Integer | Size of the partition (in bytes)                          |
 | **`encrypted`** | Boolean | Partition is encrypted                                    |
+| **`boot`**      | Boolean | <sup>[optional]</sup> Partition is the current boot app   ![](https://img.shields.io/badge/-WIP-blue) |
+| **`running`**   | Boolean | <sup>[optional]</sup> Partition is the running app        ![](https://img.shields.io/badge/-WIP-blue) |
 
 #### Endpoints
-| URI                             | HTTP method | Description                      |
-|---------------------------------|-------------|----------------------------------|
-| `/v1/system/partitions/`        | **GET**     | Retrieve partitions list         |
-| `/v1/system/partitions/<label>` | **GET**     | Retrieve partition details       |
-| `/v1/system/partitions/<label>` | **PUT**     | Update partition content via OTA ![](https://img.shields.io/badge/-WIP-blue) |
-| `/v1/system/partitions/<label>` | **DELETE**  | Erase partition content ![](https://img.shields.io/badge/-WIP-blue) |
+
+| URI                                      | HTTP method | Description                                     |
+|------------------------------------------|-------------|-------------------------------------------------|
+| `/v1/system/partitions/`                 | **GET**     | Retrieve partitions list                        |
+| `/v1/system/partitions/<label>`          | **GET**     | Retrieve partition details                      |
+| `/v1/system/partitions/<label>/sha256`   | **GET**     | Get SHA-256 digest of the partition             ![](https://img.shields.io/badge/-WIP-blue) |
+| `/v1/system/partitions/`                 | **PUT**     | Update next OTA app partition                   ![](https://img.shields.io/badge/-WIP-blue) |
+| `/v1/system/partitions/<label>`          | **PUT**     | Update partition via OTA                        ![](https://img.shields.io/badge/-WIP-blue) |
+| `/v1/system/partitions/<label>/boot`     | **PUT**     | Set partition as the next boot app              ![](https://img.shields.io/badge/-WIP-blue) |
+| `/v1/system/partitions/<label>/validate` | **POST**    | Mark app partition as valid and cancel rollback ![](https://img.shields.io/badge/-WIP-blue) |
+| `/v1/system/partitions/<label>`          | **DELETE**  | Erase partition                                 ![](https://img.shields.io/badge/-WIP-blue) |
 
 
 
@@ -77,12 +91,13 @@ ___
 | **`score`**     | Integer | Network score (times used)     |
 
 #### Endpoints
+
 | URI                               | HTTP method | Description                        |
 |-----------------------------------|-------------|------------------------------------|
 | `/v1/network/wifi/storage/`       | **GET**     | Retrieve all stored WiFi networks  |
 | `/v1/network/wifi/storage/<SSID>` | **GET**     | Retrieve stored WiFi network       |
 | `/v1/network/wifi/storage/`       | **POST**    | Store new WiFi network credentials |
-| `/v1/network/wifi/storage/<SSID>` | **PUT**     | Update WiFi network credentials ![](https://img.shields.io/badge/-WIP-blue) |
+| `/v1/network/wifi/storage/<SSID>` | **PUT**     | Update WiFi network credentials    ![](https://img.shields.io/badge/-WIP-blue) |
 | `/v1/network/wifi/storage/<SSID>` | **DELETE**  | Remove a stored WiFi network       |
 
 
@@ -110,10 +125,11 @@ ___
 | **`ap.ssid`**     | String | SSID of the board Access Point                           |
 
 #### Endpoints
+
 | URI                        | HTTP method | Description                   |
 |----------------------------|-------------|-------------------------------|
 | `/v1/network/wifi/status/` | **GET**     | Get board WiFi network status |
-| `/v1/network/wifi/status/` | **PUT**     | Update WiFi network status ![](https://img.shields.io/badge/-WIP-blue)<br><ul><li>Start/Stop AP</li><li>Change STA connected network</li><li>Change AP settings</li></ul> |
+| `/v1/network/wifi/status/` | **PUT**     | Update WiFi network status    ![](https://img.shields.io/badge/-WIP-blue)<br><ul><li>Start/Stop AP</li><li>Change STA connected network</li><li>Change AP settings</li></ul> |
 
 
 
@@ -121,6 +137,7 @@ ___
 > Storage (directories & files)
 
 #### Directory entry
+
 | Attribute      | Type    | Description                                   |
 |----------------|---------|-----------------------------------------------|
 | **`name`**     | String  | Directory entry name                          |
@@ -130,6 +147,7 @@ ___
 | **`size`**     | Integer | File size in bytes. 0 if entry is a directory |
 
 #### Endpoints
+
 | URI                                  | HTTP method | Description                                       |
 |--------------------------------------|-------------|---------------------------------------------------|
 | `/v1/storage/<mount_point>/<node>*/` | **GET**     | List directory                                    |
