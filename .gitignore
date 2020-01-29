@@ -1,3 +1,10 @@
+.vscode/*
+sdkconfig
+build/*
+
+# Python cache
+*.pyc
+
 # Prerequisites
 *.d
 
