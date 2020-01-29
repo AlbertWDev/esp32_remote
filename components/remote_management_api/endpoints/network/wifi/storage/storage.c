@@ -98,6 +98,7 @@ cJSON* _get_network_json(wm_network_info_t* network) {
 esp_err_t _rmgmt_get_network_wifi_storage(httpd_req_t *req) {
     esp_err_t ret;
     httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
     cJSON *network_list = cJSON_CreateArray();
     
     wm_network_info_t* networks = (wm_network_info_t*)malloc(WM_STORAGE_MAX_NETWORKS*sizeof(wm_network_info_t));
@@ -124,6 +125,7 @@ esp_err_t _rmgmt_get_network_wifi_storage(httpd_req_t *req) {
 esp_err_t _rmgmt_get_network_wifi_storage_ssid(httpd_req_t *req) {
     esp_err_t ret;
     httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
 
     char ssid[NETWORK_SSID_MAX_LENGTH];
     ret = _get_ssid_from_uri(req->uri, ssid, NETWORK_SSID_MAX_LENGTH);
@@ -162,6 +164,7 @@ esp_err_t _rmgmt_get_network_wifi_storage_ssid(httpd_req_t *req) {
 esp_err_t _rmgmt_post_network_wifi_storage(httpd_req_t *req) {
     esp_err_t ret;
     httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
 
     wm_network_info_t network;
     ret = _get_network_info_from_req(req, &network);
@@ -187,6 +190,7 @@ esp_err_t _rmgmt_post_network_wifi_storage(httpd_req_t *req) {
 esp_err_t _rmgmt_put_network_wifi_storage_ssid(httpd_req_t *req) {
     esp_err_t ret;
     httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
     cJSON *root = cJSON_CreateObject();
     
 
@@ -202,12 +206,20 @@ esp_err_t _rmgmt_put_network_wifi_storage_ssid(httpd_req_t *req) {
 
 esp_err_t _rmgmt_delete_network_wifi_storage_ssid(httpd_req_t *req) {
     esp_err_t ret;
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
     
-    wm_network_info_t network;
-    ret = _get_network_info_from_req(req, &network);
-    if(ret != ESP_OK) return _network_info_error_handler(req, ret);
+    //wm_network_info_t network;
+    //ret = _get_network_info_from_req(req, &network);
+    //if(ret != ESP_OK) return _network_info_error_handler(req, ret);
+    char ssid[NETWORK_SSID_MAX_LENGTH];
+    ret = _get_ssid_from_uri(req->uri, ssid, NETWORK_SSID_MAX_LENGTH);
+    if(ret != ESP_OK) {
+        //ESP_LOGE(REST_TAG, "Failed to open file : %s", filepath);
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid network ssid");
+        return ESP_FAIL;
+    }
 
-    ret = wm_storage_delete(network.ssid);
+    ret = wm_storage_delete(ssid);
     if(ret != ESP_OK) {
         if(ret == ESP_ERR_NVS_NOT_FOUND) {
             httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "Network not found with given SSID");

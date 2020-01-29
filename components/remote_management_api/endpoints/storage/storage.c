@@ -74,7 +74,8 @@ cJSON* _list_dir_json(char* path, size_t path_len) {
 }
 
 esp_err_t _rmgmt_get_storage_node(httpd_req_t *req) {
-    esp_err_t ret;    
+    esp_err_t ret;
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
     
     // Get node path from URI
     char node_name[RMGMT_STORAGE_NODE_NAME_MAX_LENGTH];
