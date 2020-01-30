@@ -7,7 +7,7 @@
 #include "storage/storage.h"
 //#include "gpio/gpio.h"
 
-const size_t _rmgmt_endpoints_len = 16;
+const size_t _rmgmt_endpoints_len = 20;
 const httpd_uri_t _rmgmt_endpoints[] = {
     /*** System.Info ***/
     {
@@ -94,6 +94,11 @@ const httpd_uri_t _rmgmt_endpoints[] = {
         .handler    = _rmgmt_put_network_wifi_status
     },
     /*** Storage ***/
+    /*{
+        .uri        = "/v1/storage/?",
+        .method     = HTTP_GET,
+        .handler    = _rmgmt_get_storage
+    },*/
     {
         .uri        = "/v1/storage/*",
         .method     = HTTP_GET,
