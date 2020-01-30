@@ -94,11 +94,11 @@ const httpd_uri_t _rmgmt_endpoints[] = {
         .handler    = _rmgmt_put_network_wifi_status
     },
     /*** Storage ***/
-    /*{
+    {
         .uri        = "/v1/storage/?",
         .method     = HTTP_GET,
         .handler    = _rmgmt_get_storage
-    },*/
+    },
     {
         .uri        = "/v1/storage/*",
         .method     = HTTP_GET,

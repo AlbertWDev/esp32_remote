@@ -18,8 +18,7 @@ esp_err_t _get_node_name_from_uri(const char* uri, char* node_name, size_t max_l
     return ESP_OK;
 }
 
-static const char* _entry_type_to_str(uint8_t type)
-{
+static const char* _entry_type_to_str(uint8_t type) {
     switch(type) {
         case DT_DIR:
             return "DIR";
@@ -73,6 +72,44 @@ cJSON* _list_dir_json(char* path, size_t path_len) {
     return dir_list;
 }
 
+cJSON* _list_mount_points_json() {
+    ESP_LOGW("RMGMT_STORAGE", "esp-idf doesn't provide a way to know registered filesystems, using 'spiffs' and 'sdcard' as default");
+
+    cJSON* storage_json = cJSON_CreateArray();
+    if(storage_json == NULL) return NULL;
+
+    cJSON* mount_point_json = cJSON_CreateObject();
+    cJSON_AddStringToObject(mount_point_json, "name", "spiffs");
+    cJSON_AddStringToObject(mount_point_json, "type", _entry_type_to_str(DT_DIR));
+    cJSON_AddItemToArray(storage_json, mount_point_json);
+
+    mount_point_json = cJSON_CreateObject();
+    cJSON_AddStringToObject(mount_point_json, "name", "sdcard");
+    cJSON_AddStringToObject(mount_point_json, "type", _entry_type_to_str(DT_DIR));
+    cJSON_AddItemToArray(storage_json, mount_point_json);
+
+    return storage_json;
+}
+
+esp_err_t _rmgmt_get_storage(httpd_req_t *req) {
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    
+    cJSON* storage_json = _list_mount_points_json();
+    if(storage_json == NULL) {
+        httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "Mount points not found or not accessible");
+        return ESP_OK;
+    }
+    
+    httpd_resp_set_type(req, "application/json");
+    const char *json = cJSON_Print(storage_json);
+
+    httpd_resp_sendstr(req, json);
+
+    free((void *)json);
+    cJSON_Delete(storage_json);
+    return ESP_OK;
+}
+
 esp_err_t _rmgmt_get_storage_node(httpd_req_t *req) {
     esp_err_t ret;
     httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
@@ -87,7 +124,7 @@ esp_err_t _rmgmt_get_storage_node(httpd_req_t *req) {
 
     size_t node_name_len = strlen(node_name);
     if(node_name[node_name_len-1] == '/') { // Directory
-        if(node_name_len > 1) node_name[--node_name_len] = '\0';
+        if(node_name_len > 1) node_name[--node_name_len] = '\0';    // Remove ending '/'
 
         cJSON* dir_json = _list_dir_json(node_name, node_name_len);
         if(dir_json == NULL) {
@@ -182,19 +219,8 @@ esp_err_t _rmgmt_put_storage_node(httpd_req_t *req) {
 }
 
 esp_err_t _rmgmt_post_storage_node(httpd_req_t *req) {
-    esp_err_t ret;
-    httpd_resp_set_type(req, "application/json");
-    cJSON *root = cJSON_CreateObject();
-    
-
-
-    const char *json = cJSON_Print(root);
-    httpd_resp_sendstr(req, json);
-
-    free((void *)json);
-    cJSON_Delete(root);
-
-    return ESP_OK;
+    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Not implemented");
+    return ESP_FAIL;
 }
 
 esp_err_t _rmgmt_delete_storage_node(httpd_req_t *req) {
