@@ -118,9 +118,10 @@ cJSON* _get_partition_json(const esp_partition_t* partition) {
 
 esp_err_t _rmgmt_get_system_partitions(httpd_req_t *req) {
     esp_err_t ret;
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+
     httpd_resp_set_type(req, "application/json");
-    cJSON *partitions, *root = cJSON_CreateObject();
-    partitions = cJSON_AddArrayToObject(root, "partitions");
+    cJSON *partitions = cJSON_CreateArray();
 
     /// APP partitions
     const esp_partition_t* running = esp_ota_get_running_partition();
@@ -151,17 +152,18 @@ esp_err_t _rmgmt_get_system_partitions(httpd_req_t *req) {
     esp_partition_iterator_release(partition_it);
 
 
-    const char *partitions_json = cJSON_Print(root);
+    const char *partitions_json = cJSON_Print(partitions);
     ret = httpd_resp_sendstr(req, partitions_json);
 
     free((void *)partitions_json);
-    cJSON_Delete(root);
+    cJSON_Delete(partitions);
 
     return ret;
 }
 
 esp_err_t _rmgmt_get_system_partitions_label(httpd_req_t *req) {
     esp_err_t ret;
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
     httpd_resp_set_type(req, "application/json");
 
     
@@ -194,6 +196,7 @@ esp_err_t _rmgmt_get_system_partitions_label(httpd_req_t *req) {
 
 esp_err_t _rmgmt_get_system_partitions_label_sha256(httpd_req_t *req) {
     esp_err_t ret;
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
 
     // Get label from URI
     char label[PARTITION_LABEL_MAX_LENGTH];
@@ -242,12 +245,14 @@ esp_err_t _rmgmt_get_system_partitions_label_sha256(httpd_req_t *req) {
 }
 
 esp_err_t _rmgmt_put_system_partitions(httpd_req_t *req) {
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
     httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Not implemented");
     return ESP_FAIL;
 }
 
 esp_err_t _rmgmt_put_system_partitions_label(httpd_req_t *req) {
     esp_err_t ret;
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
 
     char label[PARTITION_LABEL_MAX_LENGTH];
     ret = _get_partition_label_from_uri(req->uri, NULL, label, PARTITION_LABEL_MAX_LENGTH);
@@ -345,7 +350,8 @@ esp_err_t _rmgmt_put_system_partitions_label(httpd_req_t *req) {
 }
 
 esp_err_t _rmgmt_put_system_partitions_label_boot(httpd_req_t *req) {
-    esp_err_t ret;    
+    esp_err_t ret; 
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");   
 
     char label[PARTITION_LABEL_MAX_LENGTH];
     ret = _get_partition_label_from_uri(req->uri, "/boot", label, PARTITION_LABEL_MAX_LENGTH);
@@ -371,12 +377,14 @@ esp_err_t _rmgmt_put_system_partitions_label_boot(httpd_req_t *req) {
 }
 
 esp_err_t _rmgmt_post_system_partitions_label_validate(httpd_req_t *req) {
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
     httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Not implemented");
     return ESP_FAIL;
 }
 
 esp_err_t _rmgmt_delete_system_partitions_label(httpd_req_t *req) {
     esp_err_t ret;
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
 
     char label[PARTITION_LABEL_MAX_LENGTH];
     ret = _get_partition_label_from_uri(req->uri, NULL, label, PARTITION_LABEL_MAX_LENGTH);
