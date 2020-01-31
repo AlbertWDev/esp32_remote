@@ -131,7 +131,7 @@ esp_err_t _rmgmt_get_system_partitions(httpd_req_t *req) {
     for (; partition_it != NULL; partition_it = esp_partition_next(partition_it)) {
         const esp_partition_t* partition = esp_partition_get(partition_it);
         cJSON* partition_json = _get_partition_json(partition);
-        
+
         if(running != NULL && running == partition)
             cJSON_AddBoolToObject(partition_json, "running", true);
         if(boot != NULL && boot == partition)
@@ -376,6 +376,30 @@ esp_err_t _rmgmt_post_system_partitions_label_validate(httpd_req_t *req) {
 }
 
 esp_err_t _rmgmt_delete_system_partitions_label(httpd_req_t *req) {
-    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Not implemented");
-    return ESP_FAIL;
+    esp_err_t ret;
+
+    char label[PARTITION_LABEL_MAX_LENGTH];
+    ret = _get_partition_label_from_uri(req->uri, NULL, label, PARTITION_LABEL_MAX_LENGTH);
+    if(ret != ESP_OK) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid partition label");
+        return ESP_FAIL;
+    }
+
+    const esp_partition_t* partition = esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_ANY, label);
+    if(partition == NULL) {
+        partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_ANY, label);
+        if(partition == NULL){
+            httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "No partition found with given label");
+            return ESP_FAIL;
+        }
+    }
+
+    ret = esp_partition_erase_range(partition, 0, partition->size);
+    if (ret != ESP_OK) {
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Could not erase partition");
+        return ESP_FAIL;
+    }
+
+    httpd_resp_sendstr(req, "Deleted successfully");
+    return ESP_OK;
 }
