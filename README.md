@@ -60,8 +60,8 @@ ___
 | **`address`**   | Integer | Starting address of the partition in flash                |
 | **`size`**      | Integer | Size of the partition (in bytes)                          |
 | **`encrypted`** | Boolean | Partition is encrypted                                    |
-| **`boot`**      | Boolean | <sup>[optional]</sup> Partition is the current boot app   ![](https://img.shields.io/badge/-WIP-blue) |
-| **`running`**   | Boolean | <sup>[optional]</sup> Partition is the running app        ![](https://img.shields.io/badge/-WIP-blue) |
+| **`boot`**      | Boolean | <sup>[optional]</sup> Partition is the current boot app   |
+| **`running`**   | Boolean | <sup>[optional]</sup> Partition is the running app        |
 
 #### Endpoints
 
@@ -69,10 +69,10 @@ ___
 |------------------------------------------|-------------|-------------------------------------------------|
 | `/v1/system/partitions/`                 | **GET**     | Retrieve partitions list                        |
 | `/v1/system/partitions/<label>`          | **GET**     | Retrieve partition details                      |
-| `/v1/system/partitions/<label>/sha256`   | **GET**     | Get SHA-256 digest of the partition             ![](https://img.shields.io/badge/-WIP-blue) |
+| `/v1/system/partitions/<label>/sha256`   | **GET**     | Get SHA-256 digest of the partition             |
 | `/v1/system/partitions/`                 | **PUT**     | Update next OTA app partition                   ![](https://img.shields.io/badge/-WIP-blue) |
 | `/v1/system/partitions/<label>`          | **PUT**     | Update partition via OTA                        ![](https://img.shields.io/badge/-WIP-blue) |
-| `/v1/system/partitions/<label>/boot`     | **PUT**     | Set partition as the next boot app              ![](https://img.shields.io/badge/-WIP-blue) |
+| `/v1/system/partitions/<label>/boot`     | **PUT**     | Set partition as the next boot app              |
 | `/v1/system/partitions/<label>/validate` | **POST**    | Mark app partition as valid and cancel rollback ![](https://img.shields.io/badge/-WIP-blue) |
 | `/v1/system/partitions/<label>`          | **DELETE**  | Erase partition                                 ![](https://img.shields.io/badge/-WIP-blue) |
 

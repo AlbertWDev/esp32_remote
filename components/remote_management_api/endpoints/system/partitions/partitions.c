@@ -123,10 +123,20 @@ esp_err_t _rmgmt_get_system_partitions(httpd_req_t *req) {
     partitions = cJSON_AddArrayToObject(root, "partitions");
 
     /// APP partitions
+    const esp_partition_t* running = esp_ota_get_running_partition();
+    const esp_partition_t* boot = esp_ota_get_boot_partition();
+
     esp_partition_iterator_t partition_it = esp_partition_find(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_ANY, NULL);
 
     for (; partition_it != NULL; partition_it = esp_partition_next(partition_it)) {
-        cJSON* partition_json = _get_partition_json(esp_partition_get(partition_it));
+        const esp_partition_t* partition = esp_partition_get(partition_it);
+        cJSON* partition_json = _get_partition_json(partition);
+        
+        if(running != NULL && running == partition)
+            cJSON_AddBoolToObject(partition_json, "running", true);
+        if(boot != NULL && boot == partition)
+            cJSON_AddBoolToObject(partition_json, "boot", true);
+
         cJSON_AddItemToArray(partitions, partition_json);
     }
     esp_partition_iterator_release(partition_it);
@@ -355,7 +365,7 @@ esp_err_t _rmgmt_put_system_partitions_label_boot(httpd_req_t *req) {
         httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Could not set this partition as boot");
         return ESP_FAIL;
     }
-    
+
     httpd_resp_sendstr(req, "Boot set");
     return ESP_OK;
 }
