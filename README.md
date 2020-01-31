@@ -55,8 +55,8 @@ ___
 | Attribute       | Type    | Description                                               |
 |-----------------|---------|-----------------------------------------------------------|
 | **`label`**     | String  | Partition label                                           |
-| **`type`**      | String  | Partition type<br><small>`APP | DATA | UNKNOWN`</small>   |
-| **`subtype`**   | String  | Partition subtype<br><sup>[app]</sup> <small>`FACTORY | OTA_X | UNKNOWN`</small><br><sup>[data]</sup> <small>`OTA | PHY | NVS | COREDUMP | NVS_KEYS |`<br>`EFUSE_EM | ESPHTTPD | FAT | SPIFFS | UNKNOWN`</small> |
+| **`type`**      | String  | Partition type<br><small><code>APP &#124; DATA &#124; UNKNOWN</code></small>   |
+| **`subtype`**   | String  | Partition subtype<br><sup>[app]</sup> <small><code>FACTORY &#124; OTA_X &#124; UNKNOWN</code></small><br><sup>[data]</sup> <small><code>OTA &#124; PHY &#124; NVS &#124; COREDUMP &#124; NVS_KEYS &#124;</code><br><code>EFUSE_EM &#124; ESPHTTPD &#124; FAT &#124; SPIFFS &#124; UNKNOWN</code></small> |
 | **`address`**   | Integer | Starting address of the partition in flash                |
 | **`size`**      | Integer | Size of the partition (in bytes)                          |
 | **`encrypted`** | Boolean | Partition is encrypted                                    |
@@ -107,7 +107,7 @@ ___
 
 | Attribute         | Type   | Description                                              |
 |-------------------|--------|----------------------------------------------------------|
-| **`mode`**        | String | Active interfaces (AP, STA)<br><small>`NULL | STA | AP | APSTA`</small> |
+| **`mode`**        | String | Active interfaces (AP, STA)<br><small><code>NULL &#124; STA &#124; AP &#124; APSTA</code></small> |
 | **`sta`**         | Object | STA details                                              |
 | **`sta.mac`**     | String | (STA interface) MAC address                              |
 | **`sta.ip`**      | String | (STA interface) IP address                               |
@@ -147,6 +147,7 @@ ___
 
 | URI                                  | HTTP method | Description                                       |
 |--------------------------------------|-------------|---------------------------------------------------|
+| `/v1/storage/`                       | **GET**     | List of mount points ![](https://img.shields.io/badge/-WIP-blue) |
 | `/v1/storage/<mount_point>/<node>*/` | **GET**     | List directory                                    |
 | `/v1/storage/<mount_point>/<node>*`  | **GET**     | Get file                                          |
 | `/v1/storage/<mount_point>/<node>*/` | **PUT**     | Create directory                                  |
@@ -156,9 +157,6 @@ ___
 | `/v1/storage/<mount_point>/<node>*/` | **DELETE**  | Delete directory                                  |
 | `/v1/storage/<mount_point>/<node>*`  | **DELETE**  | Delete file                                       |
 
-<!--
-| `/v1/storage/`                       | **GET**     | List of mount points ![](https://img.shields.io/badge/-WIP-blue) |
--->
 
 > **NOTE**
 >
