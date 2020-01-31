@@ -173,6 +173,7 @@
             </div>
         </div>
     </div>
+
     <!-- DELETE NODE DIALOG -->
     <dialog id="storage-delete" class="mdl-dialog">
         <h1 class="mdl-dialog__title">Delete</h1>
@@ -339,7 +340,7 @@
         }
     }
 
-    var NetworkWifiStorage_DeleteDialog = class {
+    var Storage_DeleteDialog = class {
         constructor() {
             var dialog = $('#storage-delete')[0];
             if(!dialog.showModal) dialogPolyfill.registerDialog(dialog);
@@ -363,6 +364,6 @@
     ko.applyBindings(storage, $('#storage-container')[0]);
 
     // Storage - DELETE
-    var storage_delete = new Storate_DeleteDialog();
+    var storage_delete = new Storage_DeleteDialog();
     ko.applyBindings(storage_delete, $('#storage-delete')[0]);
 </script>
