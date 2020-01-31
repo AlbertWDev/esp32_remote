@@ -130,6 +130,101 @@ def put_storage_node(node):
     return node
 
 
+system_partitions = [
+    {
+        'label': 'nvs',
+        'type': 'DATA',
+        'subtype': 'NVS',
+        'address': 0x9000,
+        'size': 0x4000,
+        'encrypted': False
+    },
+    {
+        'label': 'otadata',
+        'type': 'DATA',
+        'subtype': 'OTA',
+        'address': 0xd000,
+        'size': 0x2000,
+        'encrypted': False
+    },
+    {
+        'label': 'phy_init',
+        'type': 'DATA',
+        'subtype': 'PHY',
+        'address': 0xf000,
+        'size': 0x1000,
+        'encrypted': False
+    },
+    {
+        'label': 'ota_0',
+        'type': 'APP',
+        'subtype': 'OTA_0',
+        'address': 0x10000,
+        'size': 0x100000,
+        'encrypted': False,
+        'boot': True,
+        'running': True
+    },
+    {
+        'label': 'ota_1',
+        'type': 'APP',
+        'subtype': 'OTA_1',
+        'address': 0x110000,
+        'size': 0x100000,
+        'encrypted': False
+    },
+    {
+        'label': 'storage',
+        'type': 'DATA',
+        'subtype': 'SPIFFS',
+        'address': 0x210000,
+        'size': 0x1f0000,
+        'encrypted': False
+    }
+]
+
+@app.route('/v1/system/partitions', methods=['GET'])
+def get_system_partitions():
+    return jsonify(system_partitions)
+
+@app.route('/v1/system/partitions/<string:label>', methods=['GET'])
+def get_system_partitions_label(label):
+    ## Check if partition exists
+    for partition in system_partitions:
+        print(partition['label'])
+        if partition['label'] == label:
+            return jsonify(partition)
+    
+    ## Not found
+    abort(404)
+
+@app.route('/v1/system/partitions/<string:label>', methods=['PUT'])
+def put_system_partitions_label(label):
+    if label not in [p['label'] for p in system_partitions]:
+        abort(404)
+
+    with open(os.path.join('.', f'{label}.bin'), 'wb') as f:
+        f.write(request.data)
+
+    return "Upload success"
+
+@app.route('/v1/system/partitions/<string:label>/boot', methods=['PUT'])
+def put_system_partitions_label_boot(label):
+    ## Check if partition exists
+    for partition in system_partitions:
+        if partition['label'] == label:
+            if partition['type'] != 'APP':
+                return abort(400)
+            
+            for p in system_partitions:
+                p['boot'] = False
+            partition['boot'] = True
+
+            return "Boot set"
+    
+    ## Not found
+    abort(404)
+
 
 if __name__ == '__main__':
     app.run()
