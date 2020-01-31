@@ -1,8 +1,8 @@
 # Esp32 Remote Management API
 
 REST API used to manage an Esp32 board remotely.
-___
 
+___
 ## WEB INTERFACE
 
 A web client is provided to interact with the API.
@@ -21,12 +21,9 @@ ___
         - `Network.WiFi.Storage`
         - `Network.WiFi.Status`
 - **STORAGE**
-<!--
-- **GPIO**
-- **DEVICES**
-    - Devices.Screen
--->
+
 ___
+
 <br>
 
 ## **`System.Info`**

@@ -237,7 +237,7 @@ esp_err_t _rmgmt_put_system_partitions(httpd_req_t *req) {
 }
 
 esp_err_t _rmgmt_put_system_partitions_label(httpd_req_t *req) {
-    esp_err_t ret;    
+    esp_err_t ret;
 
     char label[PARTITION_LABEL_MAX_LENGTH];
     ret = _get_partition_label_from_uri(req->uri, NULL, label, PARTITION_LABEL_MAX_LENGTH);
@@ -255,139 +255,109 @@ esp_err_t _rmgmt_put_system_partitions_label(httpd_req_t *req) {
         }
     }
 
-    /*#define PARTITION_OTA_BUFFER_SIZE 1024
+    #define PARTITION_OTA_BUFFER_SIZE 1024
     int bytes_read;
     char data[PARTITION_OTA_BUFFER_SIZE] = {0};
-    do {
-        bytes_read = httpd_req_recv(req, data, PARTITION_OTA_BUFFER_SIZE);
+    size_t bytes_writen = 0;
 
-    */
+    if(partition->type == ESP_PARTITION_TYPE_APP) { // App partition upload
+        esp_ota_handle_t update_handle;
+        while(1) {
+            bytes_read = httpd_req_recv(req, data, PARTITION_OTA_BUFFER_SIZE);
+            if(bytes_read <= 0) break;
 
-    esp_ota_handle_t update_handle = 0;
-
-    #define BUFFSIZE 1024
-    char ota_write_data[BUFFSIZE + 1] = { 0 };
-
-    int binary_file_length = 0;
-    /*deal with all receive packet*/
-    bool image_header_was_checked = false;
-
-    
-    while (1) {
-        int data_read = httpd_req_recv(req, ota_write_data, BUFFSIZE);
-        if (data_read < 0) {
-            // ERROR
-            // TODO: Cleanup
-            return ESP_OK;
-        } else if (data_read > 0) {
-            /*if (image_header_was_checked == false) {
+            if(bytes_writen == 0) { // First packet
+                // TODO: Check version
+                /*if (bytes_read < sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t)) {
+                    ret = ESP_FAIL;
+                    break;
+                }
                 esp_app_desc_t new_app_info;
-                if (data_read > sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t)) {
-                    // check current version with downloading
-                    memcpy(&new_app_info, &ota_write_data[sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t)], sizeof(esp_app_desc_t));
-                    ESP_LOGI(TAG, "New firmware version: %s", new_app_info.version);
+                
+                // Get runnning and downloaded app versions
+                memcpy(&new_app_info, &data[sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t)], sizeof(esp_app_desc_t));
 
-                    esp_app_desc_t running_app_info;
-                    if (esp_ota_get_partition_description(running, &running_app_info) == ESP_OK) {
-                        ESP_LOGI(TAG, "Running firmware version: %s", running_app_info.version);
-                    }
+                const esp_partition_t* running = esp_ota_get_running_partition();
+                esp_app_desc_t running_app_info;
+                ret = esp_ota_get_partition_description(running, &running_app_info);
+                if(ret != ESP_OK) break;
 
-                    const esp_partition_t* last_invalid_app = esp_ota_get_last_invalid_partition();
-                    esp_app_desc_t invalid_app_info;
-                    if (esp_ota_get_partition_description(last_invalid_app, &invalid_app_info) == ESP_OK) {
-                        ESP_LOGI(TAG, "Last invalid firmware version: %s", invalid_app_info.version);
-                    }
+                if (memcmp(new_app_info.version, running_app_info.version, sizeof(new_app_info.version)) == 0) {
+                    // Same version
+                    break;
+                }*/
 
-                    // check current version with last invalid partition
-                    if (last_invalid_app != NULL) {
-                        if (memcmp(invalid_app_info.version, new_app_info.version, sizeof(new_app_info.version)) == 0) {
-                            ESP_LOGW(TAG, "New version is the same as invalid version.");
-                            ESP_LOGW(TAG, "Previously, there was an attempt to launch the firmware with %s version, but it failed.", invalid_app_info.version);
-                            ESP_LOGW(TAG, "The firmware has been rolled back to the previous version.");
-                            http_cleanup(client);
-                            infinite_loop();
-                        }
-                    }
-
-                    if (memcmp(new_app_info.version, running_app_info.version, sizeof(new_app_info.version)) == 0) {
-                        ESP_LOGW(TAG, "Current running version is the same as a new. We will not continue the update.");
-                        http_cleanup(client);
-                        infinite_loop();
-                    }
-
-                    image_header_was_checked = true;
-
-                    err = esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &update_handle);
-                    if (err != ESP_OK) {
-                        ESP_LOGE(TAG, "esp_ota_begin failed (%s)", esp_err_to_name(err));
-                        http_cleanup(client);
-                        task_fatal_error();
-                    }
-                    ESP_LOGI(TAG, "esp_ota_begin succeeded");
-                } else {
-                    ESP_LOGE(TAG, "received package is not fit len");
-                    http_cleanup(client);
-                    task_fatal_error();
-                }
-            }*/
-            if(!image_header_was_checked) {
                 ret = esp_ota_begin(partition, OTA_SIZE_UNKNOWN, &update_handle);
-                if (ret != ESP_OK) {
-                    ESP_LOGE("PARTITIONS", "esp_ota_begin failed (%s)", esp_err_to_name(ret));
-                    return ESP_OK;
-                }
-                ESP_LOGI("PARTITIONS", "esp_ota_begin succeeded");
+                if (ret != ESP_OK) break;
             }
-            ret = esp_ota_write(update_handle, (const void *)ota_write_data, data_read);
-            if (ret != ESP_OK) {
-                ESP_LOGE("PARTITIONS", "esp_ota_write failed");
-                return ESP_OK;
-            }
-            binary_file_length += data_read;
-            ESP_LOGD("PARTITIONS", "Written image length %d", binary_file_length);
-        } else if (data_read == 0) {
-            ESP_LOGI("PARTITIONS", "Connection closed");
-            break;
+
+            ret = esp_ota_write(update_handle, (const void *)data, bytes_read);
+            if (ret != ESP_OK) break;
+
+            bytes_writen += bytes_read;
         }
-    }
-    ESP_LOGI("PARTITIONS", "Total Write binary data length: %d", binary_file_length);
-    /*if (esp_http_client_is_complete_data_received(client) != true) {
-        ESP_LOGE(TAG, "Error in receiving complete file");
-        http_cleanup(client);
-        task_fatal_error();
-    }*/
 
-    ret = esp_ota_end(update_handle);
-    if (ret != ESP_OK) {
-        ESP_LOGE("PARTITIONS", "esp_ota_end failed (%s)!", esp_err_to_name(ret));
-        return ESP_OK;
-    }
+        if(bytes_read < 0 || ret != ESP_OK || bytes_writen < req->content_len) {
+            esp_ota_end(update_handle);
+            httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "OTA update failed");
+            return ESP_FAIL;
+        }
 
-    /*err = esp_ota_set_boot_partition(update_partition);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "esp_ota_set_boot_partition failed (%s)!", esp_err_to_name(err));
-        http_cleanup(client);
-        task_fatal_error();
-    }
-    ESP_LOGI(TAG, "Prepare to restart system!");
-    esp_restart();*/
+        ret = esp_ota_end(update_handle);
+        if(ret != ESP_OK) {
+            httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "OTA update failed");
+            return ESP_FAIL;
+        }
+    } else {    // Other partition upload
+        while(1) {
+            bytes_read = httpd_req_recv(req, data, PARTITION_OTA_BUFFER_SIZE);
+            if(bytes_read <= 0) break;
 
+            if(bytes_writen == 0) { // First packet
+                ret = esp_partition_erase_range(partition, 0, partition->size);
+                if (ret != ESP_OK) break;
+            }
 
+            ret = esp_partition_write(partition, bytes_writen, (const void *)data, bytes_read);
+            if (ret != ESP_OK) break;
 
-    /*httpd_resp_set_type(req, "application/json");
-    cJSON *root = cJSON_CreateObject();
-    const char *json = cJSON_Print(root);
-    httpd_resp_sendstr(req, json);
+            bytes_writen += bytes_read;
+        }
+        
+        if(bytes_read < 0 || ret != ESP_OK || bytes_writen < req->content_len) {
+            httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "OTA update failed");
+            return ESP_FAIL;
+        }
+    }  
 
-    free((void *)json);
-    cJSON_Delete(root);*/
-
+    httpd_resp_sendstr(req, "Upload success");
     return ESP_OK;
 }
 
 esp_err_t _rmgmt_put_system_partitions_label_boot(httpd_req_t *req) {
-    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Not implemented");
-    return ESP_FAIL;
+    esp_err_t ret;    
+
+    char label[PARTITION_LABEL_MAX_LENGTH];
+    ret = _get_partition_label_from_uri(req->uri, "/boot", label, PARTITION_LABEL_MAX_LENGTH);
+    if(ret != ESP_OK) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid partition label");
+        return ESP_FAIL;
+    }
+
+    const esp_partition_t* partition = esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_ANY, label);
+    if(partition == NULL) {
+        httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "No APP partition found with given label");
+        return ESP_FAIL;
+    }
+
+    ret = esp_ota_set_boot_partition(partition);
+    if (ret != ESP_OK) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Could not set this partition as boot");
+        return ESP_FAIL;
+    }
+    
+    httpd_resp_sendstr(req, "Boot set");
+    return ESP_OK;
 }
 
 esp_err_t _rmgmt_post_system_partitions_label_validate(httpd_req_t *req) {
