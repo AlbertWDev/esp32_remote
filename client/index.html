@@ -279,15 +279,25 @@
             }
         }        
 
-        var api_request = (endpoint, method, data, isBinary=false) => {
+        var api_request = (endpoint, method, data, isBinary=false, upload_callback=null) => {
             if(!connection_manager.isConnected()) return;
             return $.ajax({
+                xhr: function() {
+                    var xhr = new window.XMLHttpRequest();
+                    if(upload_callback) {
+                        xhr.upload.addEventListener("progress", function(e) {
+                            upload_callback(e);
+                        }, false);
+                    }
+                    return xhr;
+                },
                 url: connection_manager.getUri(endpoint),
                 type: method,
                 contentType: isBinary ? "" : "application/json",
                 accepts: 'application/json',
                 cache: true,//false,
                 data: isBinary ? data : JSON.stringify(data),
+                processData: false,
                 error: (XHR, textStatus, errorThrown) => 
                     console.log(textStatus + ": " + errorThrown)
             })

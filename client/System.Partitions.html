@@ -1,19 +1,192 @@
 <!--  CONTENT -->
+    <style>
+        .full-width {
+            width: 100%;
+        }
+        .system-partitions-graph-container {
+            height: 20px;
+            width: 100%;
+            background-color: #9e9e9e;
+        }
+        .system-partitions-graph-item {
+            display: inline-block;
+            height: 20px;
+        }
+        .system-partitions-graph-item:nth-child(1) { background: #e4bf5b }
+        .system-partitions-graph-item:nth-child(2) { background: #e46b5b }
+        .system-partitions-graph-item:nth-child(3) { background: #92e45b }
+        .system-partitions-graph-item:nth-child(4) { background: #5be4cd }
+        .system-partitions-graph-item:nth-child(5) { background: #5b64e4 }
+        .system-partitions-graph-item:nth-child(6) { background: #a25be4 }
+        .system-partitions-graph-item:nth-child(7) { background: #5be46d }
+        .system-partitions-graph-item:nth-child(8) { background: #e4605b }
+        .system-partitions-graph-item:nth-child(9) { background: #000000 }
+        .system-partitions-graph-item:nth-child(10) { background: #976f00 }     
+
+        .mdl-snackbar__text {
+            width:100%;
+        }   
+    </style>
 <div class="mdl-grid">
     <div class="mdl-layout-spacer"></div>
-    <div class="mdl-card mdl-cell mdl-cell--4-col mdl-shadow--2dp">
-        <div class="mdl-card__title">
-            <h2 class="mdl-card__title-text">System Partitions</h2>
-        </div>
-        <div class="mdl-card__supporting-text">
-            Not implemented
+    <div id="system-partitions-container" class="mdl-card mdl-cell mdl-cell--6-col mdl-shadow--2dp">
+        <table id="system-partitions-list" class="mdl-data-table mdl-js-data-table full-width">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th class="mdl-data-table__cell--non-numeric full-width">Label</th>
+                    <th class="mdl-data-table__cell--non-numeric">Type</th>
+                    <th>Address</th>
+                    <th>Size</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- ko foreach: partitions -->
+                <tr>
+                    <td>
+                        <i data-bind="visible: running()" class="material-icons">dns</i>
+                        <i data-bind="visible: boot()" class="material-icons">power_settings_new</i>
+                    </td>
+                    <td class="mdl-data-table__cell--non-numeric">
+                        <span data-bind="text: label"></span>
+                    </td>
+                    <td class="mdl-data-table__cell--non-numeric">
+                        <span data-bind="text: subtype"></span>
+                    </td>
+                    <td>
+                        <span data-bind="text: '0x' + address().toString(16)"></span>
+                    </td>
+                    <td>
+                        <span data-bind="text: '0x' + size().toString(16)"></span>
+                    </td>
+                    <td>
+                        <button data-bind="visible: type() == 'APP', click: $parent.bootAction" class="mdl-button mdl-js-button mdl-button--icon">
+                            <i class="material-icons">autorenew</i>
+                        </button>
+                        <button data-bind="disable: running(), click: $parent.uploadAction" class="mdl-button mdl-js-button mdl-button--icon">
+                            <i class="material-icons">update</i>
+                        </button>
+                    </td>
+                </tr>
+                <!-- /ko -->
+            </tbody>
+
+            
+        </table>
+
+        <div class="system-partitions-graph-container">
+            <!-- ko foreach: partitions --><!--
+            --><span data-bind="style: { width: $root.sizePercentage(size()) }" class="system-partitions-graph-item"></span><!--
+            --><!-- /ko -->
         </div>
     </div>
     <div class="mdl-layout-spacer"></div>
+    <div id="system-partitions-upload-snackbar" class="mdl-js-snackbar mdl-snackbar">
+        <div class="mdl-snackbar__text"></div>
+        <button class="mdl-snackbar__action" type="button"></button>
+    </div>
 </div>
+
 <!--  /CONTENT -->
 
 
 <script type="text/javascript">
+    var SystemPartitions = class {
+        constructor() {
+            this.endpoint = '/system/partitions';
+            this.partitions = ko.observableArray();
+            this.total_size = 0x400000;
 
+            setOnConnectCallback(() => this.refresh());
+            this.refresh();
+        }
+
+        sizePercentage(size) {
+            return (100 * size / this.total_size) + '%';
+        };
+
+        refresh() {
+            this.partitions.removeAll();
+            if(!connection_manager.isConnected()) return;
+            api_request(this.endpoint, 'GET').done((partition_list) => {
+                partition_list.forEach(partition => {
+                    this.partitions.push({
+                        label: ko.observable(partition.label),
+                        type: ko.observable(partition.type),
+                        subtype: ko.observable(partition.subtype),
+                        address: ko.observable(partition.address),
+                        size: ko.observable(partition.size),
+                        boot: ko.observable(partition['boot']),
+                        running: ko.observable(partition['running'])
+                    });
+                });
+            });
+        }
+
+        setBoot(partition) {
+            api_request(this.endpoint + '/' + partition.label() + '/boot', 'PUT').done(() => {
+                this.partitions().forEach(partition => partition.boot(false));
+                partition.boot(true);
+            });
+            
+        }
+
+        upload(label, content) {
+            componentHandler.upgradeElements($('.mdl-snackbar').get());
+
+            var snackbar = $('#system-partitions-upload-snackbar')[0];
+            var data = {
+                message: '<div>Progress bar</div>',
+                timeout: 2147483647,
+                actionHandler: (e) => {
+                    if(snackbar.MaterialSnackbar.cleanup_) snackbar.MaterialSnackbar.cleanup_();
+                    else snackbar.classList.remove("mdl-snackbar--active");
+                },
+                actionText: 'Hide'
+            };
+            snackbar.MaterialSnackbar.showSnackbar(data);
+
+            api_request(this.endpoint + '/' + label, 'PUT',
+                content, true,
+                (e) => {
+                    if(e.lengthComputable) {
+                        var uploadPercent = parseFloat((100 * e.loaded/e.total).toFixed(2)) + '%';
+                        $('.mdl-snackbar__text')[0].innerHTML = 
+                                uploadPercent +
+                                '<div style="margin-top:3px; line-height:0; font-size:0; height:5px; width:100%; background:white">' +
+                                    '<span style="display:inline-block; height:100%; background:red; width:' + uploadPercent + '"></span>'+
+                                '</div>';
+                        
+                        if(e.loaded/e.total >= 1.0) {
+                            setTimeout(() => {
+                                if(snackbar.MaterialSnackbar.cleanup_) snackbar.MaterialSnackbar.cleanup_();
+                                else snackbar.classList.remove("mdl-snackbar--active");
+                            }, 800);
+                        }
+                    }
+                }
+            ).done(() => {});
+        }
+
+        bootAction = (partition) => {
+            this.setBoot(partition);
+        }
+
+        uploadAction = (partition) => {
+            var input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.bin';
+            input.onchange = e => {
+                var file = e.target.files[0];
+
+                this.upload(partition.label(), file);
+            }
+            input.click();
+        }
+    }
+
+    // System.Partitions
+    var system_partitions = new SystemPartitions();
+    ko.applyBindings(system_partitions, $('#system-partitions-container')[0]);
 </script>
