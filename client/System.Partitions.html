@@ -61,11 +61,14 @@
                         <span data-bind="text: '0x' + size().toString(16)"></span>
                     </td>
                     <td>
-                        <button data-bind="visible: type() == 'APP', click: $parent.bootAction" class="mdl-button mdl-js-button mdl-button--icon">
+                        <button data-bind="disable: boot(), visible: type() == 'APP', click: $parent.bootAction" class="mdl-button mdl-js-button mdl-button--icon">
                             <i class="material-icons">autorenew</i>
                         </button>
                         <button data-bind="disable: running(), click: $parent.uploadAction" class="mdl-button mdl-js-button mdl-button--icon">
                             <i class="material-icons">update</i>
+                        </button>
+                        <button data-bind="disable: running(), click: $parent.eraseAction" class="mdl-button mdl-js-button mdl-button--icon">
+                            <i class="material-icons">delete</i>
                         </button>
                     </td>
                 </tr>
@@ -87,6 +90,18 @@
         <button class="mdl-snackbar__action" type="button"></button>
     </div>
 </div>
+
+<!-- ERASE PARTITION DIALOG -->
+<dialog id="system-partitions__erase" class="mdl-dialog">
+    <h1 class="mdl-dialog__title">Erase</h1>
+    <div class="mdl-dialog__content">
+        <p>Are you sure you want to erase the partition <b><span data-bind="text: label"></span></b>?</p>                       
+    </div>
+    <div class="mdl-dialog__actions">
+        <button data-bind="click: eraseAction" id="erase-partition" type="button" class="mdl-button mdl-color-text--red">Erase</button>
+        <button onclick="$('#system-partitions__erase')[0].close();" type="button" class="mdl-button">Cancel</button>
+    </div>
+</dialog>
 
 <!--  /CONTENT -->
 
@@ -125,11 +140,10 @@
         }
 
         setBoot(partition) {
-            api_request(this.endpoint + '/' + partition.label() + '/boot', 'PUT').done(() => {
+            api_request(`${this.endpoint}/${partition.label()}/boot`, 'PUT').done(() => {
                 this.partitions().forEach(partition => partition.boot(false));
                 partition.boot(true);
             });
-            
         }
 
         upload(label, content) {
@@ -147,7 +161,7 @@
             };
             snackbar.MaterialSnackbar.showSnackbar(data);
 
-            api_request(this.endpoint + '/' + label, 'PUT',
+            api_request(`${this.endpoint}/${label}`, 'PUT',
                 content, true,
                 (e) => {
                     if(e.lengthComputable) {
@@ -168,6 +182,12 @@
                 }
             ).done(() => {});
         }
+        
+        erase(partition) {
+            api_request(`${this.endpoint}/${partition.label()}`, 'DELETE').done(() => {
+                
+            });
+        }
 
         bootAction = (partition) => {
             this.setBoot(partition);
@@ -184,9 +204,37 @@
             }
             input.click();
         }
+
+        eraseAction = (partition) => {
+            system_partitions_erase.updateContent(partition);
+            $('#system-partitions__erase')[0].showModal();
+        }
+    }
+
+    var SystemPartitions_EraseDialog = class {
+        constructor() {
+            var dialog = $('#system-partitions__erase')[0];
+            if(!dialog.showModal) dialogPolyfill.registerDialog(dialog);
+
+            this.label = ko.observable();
+        }
+
+        updateContent(partition) {
+            this.partition = partition;
+            this.label(partition.label());
+        };
+        
+        eraseAction() {
+            $('#system-partitions__erase')[0].close();
+            system_partitions.erase(this.partition);
+        }
     }
 
     // System.Partitions
     var system_partitions = new SystemPartitions();
     ko.applyBindings(system_partitions, $('#system-partitions-container')[0]);
+
+    // System.Partitions - ERASE
+    var system_partitions_erase = new SystemPartitions_EraseDialog();
+    ko.applyBindings(system_partitions_erase, $('#system-partitions__erase')[0]);
 </script>
