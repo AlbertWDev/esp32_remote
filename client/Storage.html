@@ -266,7 +266,7 @@
         }
         upload(filepath, content) {
             api_request(this.endpoint + filepath, 'PUT', content, true).done((node) => {
-                
+                this.refresh();
             });
         }
         mkdir(path) {
@@ -307,21 +307,9 @@
             input.type = 'file';
             input.onchange = e => {
                 // TODO: Upload multiple files
-
                 var file = e.target.files[0];
 
-                var reader = new FileReader();
-                reader.onload = (e) => {
-                    var data = e.target.result;
-                    console.log(data);
-                    this.upload(this.getPath() + file.name, data);
-                };
-                reader.onerror = (e) => {
-                    alert(e.target.error.name);
-                };
-                reader.readAsBinaryString(file);
-
-                
+                this.upload(this.getPath() + file.name, file);
             }
             input.click();
         }
