@@ -3,6 +3,10 @@
         .full-width {
             width: 100%;
         }
+        .material-icons.encrypted-icon {
+                font-size: 12px;
+                /*color: rgb(93, 175, 93);*/
+            }
         .system-partitions-graph-container {
             height: 20px;
             width: 100%;
@@ -49,6 +53,7 @@
                         <i data-bind="visible: boot()" class="material-icons">power_settings_new</i>
                     </td>
                     <td class="mdl-data-table__cell--non-numeric">
+                        <i data-bind="visible: encrypted()" class="material-icons encrypted-icon" role="presentation">https</i>
                         <span data-bind="text: label"></span>
                     </td>
                     <td class="mdl-data-table__cell--non-numeric">
@@ -62,13 +67,16 @@
                     </td>
                     <td>
                         <button data-bind="disable: boot(), visible: type() == 'APP', click: $parent.bootAction" class="mdl-button mdl-js-button mdl-button--icon">
-                            <i class="material-icons">autorenew</i>
-                        </button>
-                        <button data-bind="disable: running(), click: $parent.uploadAction" class="mdl-button mdl-js-button mdl-button--icon">
                             <i class="material-icons">update</i>
                         </button>
+                        <!-- <button data-bind="visible: type() == 'APP', click: $parent.verifyAction" class="mdl-button mdl-js-button mdl-button--icon">
+                            <i class="material-icons">check_circle_outline</i>
+                        </button> -->
+                        <button data-bind="disable: running(), click: $parent.uploadAction" class="mdl-button mdl-js-button mdl-button--icon">
+                            <i class="material-icons">publish</i>
+                        </button>
                         <button data-bind="disable: running(), click: $parent.eraseAction" class="mdl-button mdl-js-button mdl-button--icon">
-                            <i class="material-icons">delete</i>
+                            <i class="material-icons">clear</i>
                         </button>
                     </td>
                 </tr>
@@ -132,6 +140,7 @@
                         subtype: ko.observable(partition.subtype),
                         address: ko.observable(partition.address),
                         size: ko.observable(partition.size),
+                        encrypted: ko.observable(partition.encrypted),
                         boot: ko.observable(partition['boot']),
                         running: ko.observable(partition['running'])
                     });

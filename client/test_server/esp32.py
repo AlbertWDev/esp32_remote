@@ -137,7 +137,7 @@ system_partitions = [
         'subtype': 'NVS',
         'address': 0x9000,
         'size': 0x4000,
-        'encrypted': False
+        'encrypted': True
     },
     {
         'label': 'otadata',
@@ -221,6 +221,22 @@ def put_system_partitions_label_boot(label):
             partition['boot'] = True
 
             return "Boot set"
+    
+    ## Not found
+    abort(404)
+
+@app.route('/v1/system/partitions/<string:label>', methods=['DELETE'])
+def delete_system_partitions_label(label):
+    ## Check if partition exists
+    for partition in system_partitions:
+        if partition['label'] == label:
+            if 'running' in partition and partition['running'] == True:
+                return abort(400)
+            
+            if partition['subtype'] == 'SPIFFS':
+                pass # Clear storage
+
+            return ""
     
     ## Not found
     abort(404)
