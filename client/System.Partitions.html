@@ -160,7 +160,7 @@
 
             var snackbar = $('#system-partitions-upload-snackbar')[0];
             var data = {
-                message: '<div>Progress bar</div>',
+                message: `Updating ${label}...`,
                 timeout: 2147483647,
                 actionHandler: (e) => {
                     if(snackbar.MaterialSnackbar.cleanup_) snackbar.MaterialSnackbar.cleanup_();

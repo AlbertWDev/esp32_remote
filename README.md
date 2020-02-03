@@ -70,11 +70,11 @@ ___
 | `/v1/system/partitions/`                 | **GET**     | Retrieve partitions list                        |
 | `/v1/system/partitions/<label>`          | **GET**     | Retrieve partition details                      |
 | `/v1/system/partitions/<label>/sha256`   | **GET**     | Get SHA-256 digest of the partition             |
-| `/v1/system/partitions/`                 | **PUT**     | Update next OTA app partition                   ![](https://img.shields.io/badge/-WIP-blue) |
-| `/v1/system/partitions/<label>`          | **PUT**     | Update partition via OTA                        ![](https://img.shields.io/badge/-WIP-blue) |
+| `/v1/system/partitions/`                 | **PUT**     | Update next OTA app partition                   |
+| `/v1/system/partitions/<label>`          | **PUT**     | Update partition via OTA                        |
 | `/v1/system/partitions/<label>/boot`     | **PUT**     | Set partition as the next boot app              |
 | `/v1/system/partitions/<label>/validate` | **POST**    | Mark app partition as valid and cancel rollback ![](https://img.shields.io/badge/-WIP-blue) |
-| `/v1/system/partitions/<label>`          | **DELETE**  | Erase partition                                 ![](https://img.shields.io/badge/-WIP-blue) |
+| `/v1/system/partitions/<label>`          | **DELETE**  | Erase partition                                 |
 
 
 
@@ -126,7 +126,7 @@ ___
 | URI                        | HTTP method | Description                   |
 |----------------------------|-------------|-------------------------------|
 | `/v1/network/wifi/status/` | **GET**     | Get board WiFi network status |
-| `/v1/network/wifi/status/` | **PUT**     | Update WiFi network status    ![](https://img.shields.io/badge/-WIP-blue)<br><ul><li>Start/Stop AP</li><li>Change STA connected network</li><li>Change AP settings</li></ul> |
+| `/v1/network/wifi/status/` | **PUT**     | Update WiFi network status    ![](https://img.shields.io/badge/-WIP-blue) <br><ul><li>Start/Stop AP</li><li>Change STA connected network</li><li>Change AP settings</li></ul> |
 
 
 

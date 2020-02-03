@@ -15,7 +15,6 @@ esp_err_t _get_ssid_from_uri(const char* uri, char* ssid, size_t max_len) {
     return ESP_OK;
 }
 
-
 esp_err_t _get_network_info_from_req(httpd_req_t *req, wm_network_info_t* network) {
     if(req == NULL || network == NULL)
         return ESP_ERR_INVALID_ARG;
@@ -97,7 +96,6 @@ cJSON* _get_network_json(wm_network_info_t* network) {
 
 esp_err_t _rmgmt_get_network_wifi_storage(httpd_req_t *req) {
     APPLY_HEADERS(req);
-    httpd_resp_set_type(req, "application/json");
     esp_err_t ret;
     
     cJSON *network_list = cJSON_CreateArray();
@@ -115,6 +113,7 @@ esp_err_t _rmgmt_get_network_wifi_storage(httpd_req_t *req) {
     free(networks);
 
     const char *json = cJSON_Print(network_list);
+    httpd_resp_set_type(req, "application/json");
     httpd_resp_sendstr(req, json);
 
     free((void *)json);
@@ -125,13 +124,11 @@ esp_err_t _rmgmt_get_network_wifi_storage(httpd_req_t *req) {
 
 esp_err_t _rmgmt_get_network_wifi_storage_ssid(httpd_req_t *req) {
     APPLY_HEADERS(req);
-    httpd_resp_set_type(req, "application/json");
     esp_err_t ret;
 
     char ssid[NETWORK_SSID_MAX_LENGTH];
     ret = _get_ssid_from_uri(req->uri, ssid, NETWORK_SSID_MAX_LENGTH);
     if(ret != ESP_OK) {
-        //ESP_LOGE(REST_TAG, "Failed to open file : %s", filepath);
         httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid network ssid");
         return ESP_FAIL;
     }
@@ -147,6 +144,7 @@ esp_err_t _rmgmt_get_network_wifi_storage_ssid(httpd_req_t *req) {
             cJSON* network = _get_network_json(&networks[i]);
             const char* network_json = cJSON_Print(network);
 
+            httpd_resp_set_type(req, "application/json");
             httpd_resp_sendstr(req, network_json);
 
             free((void*)network_json);
@@ -164,7 +162,6 @@ esp_err_t _rmgmt_get_network_wifi_storage_ssid(httpd_req_t *req) {
 
 esp_err_t _rmgmt_post_network_wifi_storage(httpd_req_t *req) {
     APPLY_HEADERS(req);
-    httpd_resp_set_type(req, "application/json");
     esp_err_t ret;
 
     wm_network_info_t network;
@@ -180,6 +177,7 @@ esp_err_t _rmgmt_post_network_wifi_storage(httpd_req_t *req) {
     cJSON* network_json = _get_network_json(&network);
     const char *json = cJSON_Print(network_json);
     
+    httpd_resp_set_type(req, "application/json");
     httpd_resp_sendstr(req, json);
     
     free((void *)json);
@@ -198,14 +196,10 @@ esp_err_t _rmgmt_put_network_wifi_storage_ssid(httpd_req_t *req) {
 esp_err_t _rmgmt_delete_network_wifi_storage_ssid(httpd_req_t *req) {
     APPLY_HEADERS(req);
     esp_err_t ret;
-    
-    //wm_network_info_t network;
-    //ret = _get_network_info_from_req(req, &network);
-    //if(ret != ESP_OK) return _network_info_error_handler(req, ret);
+
     char ssid[NETWORK_SSID_MAX_LENGTH];
     ret = _get_ssid_from_uri(req->uri, ssid, NETWORK_SSID_MAX_LENGTH);
     if(ret != ESP_OK) {
-        //ESP_LOGE(REST_TAG, "Failed to open file : %s", filepath);
         httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid network ssid");
         return ESP_FAIL;
     }

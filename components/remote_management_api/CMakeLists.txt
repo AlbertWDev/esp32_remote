@@ -16,7 +16,7 @@ FOREACH(ENDPOINT_DIR ${ENDPOINT_DIRS})
     # Check if this directory contains SRC files
     FILE(GLOB src_files "${COMPONENT_PATH}/${ENDPOINT_DIR}/*.c")
     IF(IS_DIRECTORY "${COMPONENT_PATH}/${ENDPOINT_DIR}" AND src_files)
-        message("Endpoint: ${ENDPOINT_DIR}")
+        #message(STATUS "Remote management endpoint: ${ENDPOINT_DIR}")
         LIST(APPEND COMPONENT_SRCDIRS ${ENDPOINT_DIR})
     ENDIF()
 ENDFOREACH()

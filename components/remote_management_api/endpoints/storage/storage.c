@@ -132,9 +132,8 @@ esp_err_t _rmgmt_get_storage_node(httpd_req_t *req) {
             return ESP_OK;
         }
         
-        httpd_resp_set_type(req, "application/json");
         const char *json = cJSON_Print(dir_json);
-
+        httpd_resp_set_type(req, "application/json");
         httpd_resp_sendstr(req, json);
 
         free((void *)json);
@@ -146,7 +145,6 @@ esp_err_t _rmgmt_get_storage_node(httpd_req_t *req) {
             return ESP_OK;
         }
 
-        //httpd_resp_set_type(req, "text/plain");
         httpd_resp_set_type(req, "application/octet-stream");
 
         char *chunk = (char*)malloc(FILE_BUFFER_SIZE);
@@ -158,7 +156,7 @@ esp_err_t _rmgmt_get_storage_node(httpd_req_t *req) {
         free(chunk);
         close(fd);
         httpd_resp_send_chunk(req, NULL, 0);
-
+        
         if(read_bytes < 0 || ret != ESP_OK)
             httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to send file");
     }

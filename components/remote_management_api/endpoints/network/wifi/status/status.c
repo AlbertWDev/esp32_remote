@@ -23,7 +23,6 @@ esp_err_t fill_ip_address(tcpip_adapter_if_t tcpip_if, cJSON* node) {
 
 esp_err_t _rmgmt_get_network_wifi_status(httpd_req_t *req) {
     APPLY_HEADERS(req);
-    httpd_resp_set_type(req, "application/json");
     esp_err_t ret;
     
     cJSON *sta, *ap, *root = cJSON_CreateObject();
@@ -67,6 +66,7 @@ esp_err_t _rmgmt_get_network_wifi_status(httpd_req_t *req) {
     }
 
     const char *wifi_json = cJSON_Print(root);
+    httpd_resp_set_type(req, "application/json");
     httpd_resp_sendstr(req, wifi_json);
 
     free((void *)wifi_json);
@@ -76,17 +76,8 @@ esp_err_t _rmgmt_get_network_wifi_status(httpd_req_t *req) {
 }
 
 esp_err_t _rmgmt_put_network_wifi_status(httpd_req_t *req) {
-    esp_err_t ret;
-    httpd_resp_set_type(req, "application/json");
-    cJSON *root = cJSON_CreateObject();
-    
+    APPLY_HEADERS(req);
 
-
-    const char *json = cJSON_Print(root);
-    httpd_resp_sendstr(req, json);
-
-    free((void *)json);
-    cJSON_Delete(root);
-
+    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Not implemented");
     return ESP_OK;
 }

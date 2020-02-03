@@ -2,6 +2,7 @@
 
 #define SHA256_HASH_LEN 32
 #define PARTITION_LABEL_MAX_LENGTH 16
+#define PARTITION_OTA_UPDATE_BUFFER_SIZE 1024
 #define REST_ERR_STORAGE_PARTITION_INVALID_LABEL 0x70
 
 esp_err_t _get_partition_label_from_uri(const char* uri, const char* tail, char* label, size_t max_len) {
@@ -25,8 +26,7 @@ esp_err_t _get_partition_label_from_uri(const char* uri, const char* tail, char*
     return ESP_OK;
 }
 
-static const char* _partition_type_to_str(esp_partition_type_t type)
-{
+static const char* _partition_type_to_str(esp_partition_type_t type) {
     switch(type) {
         case ESP_PARTITION_TYPE_APP:
             return "APP";
@@ -37,8 +37,7 @@ static const char* _partition_type_to_str(esp_partition_type_t type)
     }
 }
 
-static const char* _partition_subtype_to_str(esp_partition_type_t type, esp_partition_subtype_t subtype)
-{
+static const char* _partition_subtype_to_str(esp_partition_type_t type, esp_partition_subtype_t subtype) {
     if(type == ESP_PARTITION_TYPE_APP)
         switch(subtype) {
             case ESP_PARTITION_SUBTYPE_APP_FACTORY:
@@ -116,6 +115,91 @@ cJSON* _get_partition_json(const esp_partition_t* partition) {
     return partition_json;
 }
 
+esp_err_t _ota_update_app_partition(const esp_partition_t* partition, httpd_req_t* req) {
+    esp_err_t ret = ESP_OK;
+
+    int bytes_read;
+    char data[PARTITION_OTA_UPDATE_BUFFER_SIZE] = {0};
+    size_t bytes_writen = 0;
+    esp_ota_handle_t update_handle;
+
+    while(1) {
+        // Receive image data
+        bytes_read = httpd_req_recv(req, data, PARTITION_OTA_UPDATE_BUFFER_SIZE);
+        if(bytes_read <= 0) break;
+
+        if(bytes_writen == 0) { // First packet
+            // TODO: Check version
+            /*if (bytes_read < sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t)) {
+                ret = ESP_FAIL;
+                break;
+            }
+            esp_app_desc_t new_app_info;
+            
+            // Get runnning and downloaded app versions
+            memcpy(&new_app_info, &data[sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t)], sizeof(esp_app_desc_t));
+
+            const esp_partition_t* running = esp_ota_get_running_partition();
+            esp_app_desc_t running_app_info;
+            ret = esp_ota_get_partition_description(running, &running_app_info);
+            if(ret != ESP_OK) break;
+
+            if (memcmp(new_app_info.version, running_app_info.version, sizeof(new_app_info.version)) == 0) {
+                // Same version
+                break;
+            }*/
+
+            ret = esp_ota_begin(partition, OTA_SIZE_UNKNOWN, &update_handle);
+            if (ret != ESP_OK) break;
+        }
+
+        // Write image data
+        ret = esp_ota_write(update_handle, (const void *)data, bytes_read);
+        if (ret != ESP_OK) break;
+
+        bytes_writen += bytes_read;
+    }
+
+    // Check if something went wrong
+    if(bytes_read < 0 || ret != ESP_OK || bytes_writen < req->content_len) {
+        esp_ota_end(update_handle);
+        return ESP_FAIL;
+    }
+
+    return esp_ota_end(update_handle);
+}
+
+esp_err_t _ota_update_data_partition(const esp_partition_t* partition, httpd_req_t* req) {
+    esp_err_t ret = ESP_OK;
+
+    int bytes_read;
+    char data[PARTITION_OTA_UPDATE_BUFFER_SIZE] = {0};
+    size_t bytes_writen = 0;
+
+    while(1) {
+        // Receive image data
+        bytes_read = httpd_req_recv(req, data, PARTITION_OTA_UPDATE_BUFFER_SIZE);
+        if(bytes_read <= 0) break;
+
+        if(bytes_writen == 0) { // First packet
+            ret = esp_partition_erase_range(partition, 0, partition->size);
+            if (ret != ESP_OK) break;
+        }
+
+        // Write image data
+        ret = esp_partition_write(partition, bytes_writen, (const void *)data, bytes_read);
+        if (ret != ESP_OK) break;
+
+        bytes_writen += bytes_read;
+    }
+    
+    // Check if something went wrong
+    if(bytes_read < 0 || ret != ESP_OK || bytes_writen < req->content_len)
+        return ESP_FAIL;
+    
+    return ret;
+}
+
 esp_err_t _rmgmt_get_system_partitions(httpd_req_t *req) {
     APPLY_HEADERS(req);
     esp_err_t ret;
@@ -157,13 +241,11 @@ esp_err_t _rmgmt_get_system_partitions(httpd_req_t *req) {
 
     free((void *)partitions_json);
     cJSON_Delete(partitions);
-
     return ret;
 }
 
 esp_err_t _rmgmt_get_system_partitions_label(httpd_req_t *req) {
     APPLY_HEADERS(req);
-    httpd_resp_set_type(req, "application/json");
     esp_err_t ret;
     
     char label[PARTITION_LABEL_MAX_LENGTH];
@@ -182,14 +264,14 @@ esp_err_t _rmgmt_get_system_partitions_label(httpd_req_t *req) {
         }
     }
 
-    cJSON* root = _get_partition_json((const esp_partition_t*)partition);
+    cJSON* partition_info = _get_partition_json((const esp_partition_t*)partition);
 
-    const char *partition_json = cJSON_Print(root);
+    const char *partition_json = cJSON_Print(partition_info);
+    httpd_resp_set_type(req, "application/json");
     ret = httpd_resp_sendstr(req, partition_json);
+
     free((void *)partition_json);
-
-    cJSON_Delete(root);
-
+    cJSON_Delete(partition_info);
     return ret;
 }
 
@@ -245,9 +327,29 @@ esp_err_t _rmgmt_get_system_partitions_label_sha256(httpd_req_t *req) {
 
 esp_err_t _rmgmt_put_system_partitions(httpd_req_t *req) {
     APPLY_HEADERS(req);
+    esp_err_t ret;
 
-    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Not implemented");
-    return ESP_OK;
+    const esp_partition_t* partition = esp_ota_get_next_update_partition(NULL);
+    if(partition == NULL) {
+        httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "No OTA app slot found");
+        return ESP_FAIL;
+    }
+
+    ret = _ota_update_app_partition(partition, req);
+    if(ret != ESP_OK) {
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "OTA update failed");
+        return ret;
+    }
+
+    cJSON* partition_info = _get_partition_json((const esp_partition_t*)partition);
+
+    const char *partition_json = cJSON_Print(partition_info);
+    httpd_resp_set_type(req, "application/json");
+    ret = httpd_resp_sendstr(req, partition_json);
+
+    free((void *)partition_json);
+    cJSON_Delete(partition_info);
+    return ret;
 }
 
 esp_err_t _rmgmt_put_system_partitions_label(httpd_req_t *req) {
@@ -270,80 +372,17 @@ esp_err_t _rmgmt_put_system_partitions_label(httpd_req_t *req) {
         }
     }
 
-    #define PARTITION_OTA_BUFFER_SIZE 1024
-    int bytes_read;
-    char data[PARTITION_OTA_BUFFER_SIZE] = {0};
-    size_t bytes_writen = 0;
+    if(partition->type == ESP_PARTITION_TYPE_APP)
+        // App partition upload
+        ret = _ota_update_app_partition(partition, req);
+    else
+        // Other partition upload
+        ret = _ota_update_data_partition(partition, req);
 
-    if(partition->type == ESP_PARTITION_TYPE_APP) { // App partition upload
-        esp_ota_handle_t update_handle;
-        while(1) {
-            bytes_read = httpd_req_recv(req, data, PARTITION_OTA_BUFFER_SIZE);
-            if(bytes_read <= 0) break;
-
-            if(bytes_writen == 0) { // First packet
-                // TODO: Check version
-                /*if (bytes_read < sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t)) {
-                    ret = ESP_FAIL;
-                    break;
-                }
-                esp_app_desc_t new_app_info;
-                
-                // Get runnning and downloaded app versions
-                memcpy(&new_app_info, &data[sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t)], sizeof(esp_app_desc_t));
-
-                const esp_partition_t* running = esp_ota_get_running_partition();
-                esp_app_desc_t running_app_info;
-                ret = esp_ota_get_partition_description(running, &running_app_info);
-                if(ret != ESP_OK) break;
-
-                if (memcmp(new_app_info.version, running_app_info.version, sizeof(new_app_info.version)) == 0) {
-                    // Same version
-                    break;
-                }*/
-
-                ret = esp_ota_begin(partition, OTA_SIZE_UNKNOWN, &update_handle);
-                if (ret != ESP_OK) break;
-            }
-
-            ret = esp_ota_write(update_handle, (const void *)data, bytes_read);
-            if (ret != ESP_OK) break;
-
-            bytes_writen += bytes_read;
-        }
-
-        if(bytes_read < 0 || ret != ESP_OK || bytes_writen < req->content_len) {
-            esp_ota_end(update_handle);
-            httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "OTA update failed");
-            return ESP_FAIL;
-        }
-
-        ret = esp_ota_end(update_handle);
-        if(ret != ESP_OK) {
-            httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "OTA update failed");
-            return ESP_FAIL;
-        }
-    } else {    // Other partition upload
-        while(1) {
-            bytes_read = httpd_req_recv(req, data, PARTITION_OTA_BUFFER_SIZE);
-            if(bytes_read <= 0) break;
-
-            if(bytes_writen == 0) { // First packet
-                ret = esp_partition_erase_range(partition, 0, partition->size);
-                if (ret != ESP_OK) break;
-            }
-
-            ret = esp_partition_write(partition, bytes_writen, (const void *)data, bytes_read);
-            if (ret != ESP_OK) break;
-
-            bytes_writen += bytes_read;
-        }
-        
-        if(bytes_read < 0 || ret != ESP_OK || bytes_writen < req->content_len) {
-            httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "OTA update failed");
-            return ESP_FAIL;
-        }
-    }  
+    if(ret != ESP_OK) {
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "OTA update failed");
+        return ret;
+    }
 
     httpd_resp_sendstr(req, "Upload success");
     return ESP_OK;
@@ -353,6 +392,7 @@ esp_err_t _rmgmt_put_system_partitions_label_boot(httpd_req_t *req) {
     APPLY_HEADERS(req);
     esp_err_t ret;
 
+    // Get label from URI
     char label[PARTITION_LABEL_MAX_LENGTH];
     ret = _get_partition_label_from_uri(req->uri, "/boot", label, PARTITION_LABEL_MAX_LENGTH);
     if(ret != ESP_OK) {
@@ -360,12 +400,14 @@ esp_err_t _rmgmt_put_system_partitions_label_boot(httpd_req_t *req) {
         return ESP_FAIL;
     }
 
+    // Get partition with given label
     const esp_partition_t* partition = esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_ANY, label);
     if(partition == NULL) {
         httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "No APP partition found with given label");
         return ESP_FAIL;
     }
 
+    // Set partition as boot
     ret = esp_ota_set_boot_partition(partition);
     if (ret != ESP_OK) {
         httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Could not set this partition as boot");
@@ -387,6 +429,7 @@ esp_err_t _rmgmt_delete_system_partitions_label(httpd_req_t *req) {
     APPLY_HEADERS(req);
     esp_err_t ret;
 
+    // Get label from URI
     char label[PARTITION_LABEL_MAX_LENGTH];
     ret = _get_partition_label_from_uri(req->uri, NULL, label, PARTITION_LABEL_MAX_LENGTH);
     if(ret != ESP_OK) {
@@ -394,6 +437,7 @@ esp_err_t _rmgmt_delete_system_partitions_label(httpd_req_t *req) {
         return ESP_FAIL;
     }
 
+    // Get partition with given label
     const esp_partition_t* partition = esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_ANY, label);
     if(partition == NULL) {
         partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_ANY, label);
@@ -403,6 +447,7 @@ esp_err_t _rmgmt_delete_system_partitions_label(httpd_req_t *req) {
         }
     }
 
+    // Erase partition
     ret = esp_partition_erase_range(partition, 0, partition->size);
     if (ret != ESP_OK) {
         httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Could not erase partition");

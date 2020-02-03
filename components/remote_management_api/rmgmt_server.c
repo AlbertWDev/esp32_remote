@@ -37,14 +37,12 @@ bool _uri_match(const char *template, const char *uri, size_t uri_len) {
 }
 
 static void _connect_handler(void* arg, esp_event_base_t event_base, 
-                            int32_t event_id, void* event_data)
-{
+                            int32_t event_id, void* event_data) {
     rmgmt_start(_rmgmt_server);
 }
 
 static void _disconnect_handler(void* arg, esp_event_base_t event_base, 
-                               int32_t event_id, void* event_data)
-{
+                               int32_t event_id, void* event_data) {
     if(_rmgmt_server == NULL) return;
     rmgmt_stop(&_rmgmt_server->server_handle);
 }
