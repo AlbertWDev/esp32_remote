@@ -1,4 +1,4 @@
-#include "rmgmt_server.h"
+#include "remote_management.h"
 
 static const char* TAG = "RMGMT_SERVER";
 static rmgmt_server_t* _rmgmt_server = NULL;

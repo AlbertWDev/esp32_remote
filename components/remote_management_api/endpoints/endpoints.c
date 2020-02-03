@@ -1,4 +1,4 @@
-#include "../rmgmt_server.h"
+#include "../remote_management.h"
 
 #include "system/info/info.h"
 #include "system/partitions/partitions.h"

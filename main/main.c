@@ -14,7 +14,7 @@
 #include "driver/sdmmc_host.h"
 #include "driver/sdspi_host.h"
 
-#include "rmgmt_server.h"
+#include "remote_management.h"
 #include "wifi_manager.h"
 
 #include <esp_log.h>
