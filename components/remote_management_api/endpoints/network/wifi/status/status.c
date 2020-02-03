@@ -22,8 +22,10 @@ esp_err_t fill_ip_address(tcpip_adapter_if_t tcpip_if, cJSON* node) {
 }
 
 esp_err_t _rmgmt_get_network_wifi_status(httpd_req_t *req) {
-    esp_err_t ret;
+    APPLY_HEADERS(req);
     httpd_resp_set_type(req, "application/json");
+    esp_err_t ret;
+    
     cJSON *sta, *ap, *root = cJSON_CreateObject();
     sta = cJSON_AddObjectToObject(root, "sta");
     ap = cJSON_AddObjectToObject(root, "ap");

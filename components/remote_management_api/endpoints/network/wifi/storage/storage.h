@@ -3,6 +3,7 @@
 #include <esp_https_server.h>
 #include <esp_err.h>
 #include "cJSON.h"
+#include "headers.h"
 
 #include "wifi_manager.h"
 

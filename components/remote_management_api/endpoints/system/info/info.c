@@ -24,19 +24,19 @@ void fill_chip_info(cJSON* node) {
 }
 
 esp_err_t _rmgmt_get_system_info(httpd_req_t *req) {
-    esp_err_t ret;
+    APPLY_HEADERS(req);
+
     httpd_resp_set_type(req, "application/json");
-    cJSON *root = cJSON_CreateObject();
+    cJSON *sys_info = cJSON_CreateObject();
 
-    fill_chip_info(root);
-    cJSON_AddStringToObject(root, "idf_ver", esp_get_idf_version());
-    cJSON_AddNumberToObject(root, "free_heap", esp_get_free_heap_size());
+    fill_chip_info(sys_info);
+    cJSON_AddStringToObject(sys_info, "idf_ver", esp_get_idf_version());
+    cJSON_AddNumberToObject(sys_info, "free_heap", esp_get_free_heap_size());
 
-    const char *sys_info = cJSON_Print(root);
-    httpd_resp_sendstr(req, sys_info);
+    const char *sys_info_json = cJSON_Print(sys_info);
+    httpd_resp_sendstr(req, sys_info_json);
 
-    free((void *)sys_info);
-    cJSON_Delete(root);
-
+    free((void *)sys_info_json);
+    cJSON_Delete(sys_info);
     return ESP_OK;
 }

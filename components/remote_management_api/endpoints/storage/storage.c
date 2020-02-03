@@ -92,7 +92,7 @@ cJSON* _list_mount_points_json() {
 }
 
 esp_err_t _rmgmt_get_storage(httpd_req_t *req) {
-    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    APPLY_HEADERS(req);
     
     cJSON* storage_json = _list_mount_points_json();
     if(storage_json == NULL) {
@@ -111,8 +111,8 @@ esp_err_t _rmgmt_get_storage(httpd_req_t *req) {
 }
 
 esp_err_t _rmgmt_get_storage_node(httpd_req_t *req) {
+    APPLY_HEADERS(req);
     esp_err_t ret;
-    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
     
     // Get node path from URI
     char node_name[RMGMT_STORAGE_NODE_NAME_MAX_LENGTH];
@@ -166,6 +166,7 @@ esp_err_t _rmgmt_get_storage_node(httpd_req_t *req) {
 }
 
 esp_err_t _rmgmt_put_storage_node(httpd_req_t *req) {
+    APPLY_HEADERS(req);
     esp_err_t ret;    
     
     // Get node path from URI
@@ -219,11 +220,14 @@ esp_err_t _rmgmt_put_storage_node(httpd_req_t *req) {
 }
 
 esp_err_t _rmgmt_post_storage_node(httpd_req_t *req) {
+    APPLY_HEADERS(req);
+
     httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Not implemented");
-    return ESP_FAIL;
+    return ESP_OK;
 }
 
 esp_err_t _rmgmt_delete_storage_node(httpd_req_t *req) {
+    APPLY_HEADERS(req);
     esp_err_t ret;
     
     // Get node path from URI

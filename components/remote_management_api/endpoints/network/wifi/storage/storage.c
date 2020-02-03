@@ -96,9 +96,10 @@ cJSON* _get_network_json(wm_network_info_t* network) {
 }
 
 esp_err_t _rmgmt_get_network_wifi_storage(httpd_req_t *req) {
-    esp_err_t ret;
+    APPLY_HEADERS(req);
     httpd_resp_set_type(req, "application/json");
-    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    esp_err_t ret;
+    
     cJSON *network_list = cJSON_CreateArray();
     
     wm_network_info_t* networks = (wm_network_info_t*)malloc(WM_STORAGE_MAX_NETWORKS*sizeof(wm_network_info_t));
@@ -123,9 +124,9 @@ esp_err_t _rmgmt_get_network_wifi_storage(httpd_req_t *req) {
 }
 
 esp_err_t _rmgmt_get_network_wifi_storage_ssid(httpd_req_t *req) {
-    esp_err_t ret;
+    APPLY_HEADERS(req);
     httpd_resp_set_type(req, "application/json");
-    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    esp_err_t ret;
 
     char ssid[NETWORK_SSID_MAX_LENGTH];
     ret = _get_ssid_from_uri(req->uri, ssid, NETWORK_SSID_MAX_LENGTH);
@@ -162,9 +163,9 @@ esp_err_t _rmgmt_get_network_wifi_storage_ssid(httpd_req_t *req) {
 }
 
 esp_err_t _rmgmt_post_network_wifi_storage(httpd_req_t *req) {
-    esp_err_t ret;
+    APPLY_HEADERS(req);
     httpd_resp_set_type(req, "application/json");
-    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    esp_err_t ret;
 
     wm_network_info_t network;
     ret = _get_network_info_from_req(req, &network);
@@ -188,25 +189,15 @@ esp_err_t _rmgmt_post_network_wifi_storage(httpd_req_t *req) {
 }
 
 esp_err_t _rmgmt_put_network_wifi_storage_ssid(httpd_req_t *req) {
-    esp_err_t ret;
-    httpd_resp_set_type(req, "application/json");
-    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
-    cJSON *root = cJSON_CreateObject();
-    
+    APPLY_HEADERS(req);
 
-
-    const char *json = cJSON_Print(root);
-    httpd_resp_sendstr(req, json);
-
-    free((void *)json);
-    cJSON_Delete(root);
-
+    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Not implemented");
     return ESP_OK;
 }
 
 esp_err_t _rmgmt_delete_network_wifi_storage_ssid(httpd_req_t *req) {
+    APPLY_HEADERS(req);
     esp_err_t ret;
-    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
     
     //wm_network_info_t network;
     //ret = _get_network_info_from_req(req, &network);
