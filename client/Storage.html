@@ -204,6 +204,7 @@
         getPath = (path_array) => path_array ? path_array.join('/') + '/' : this.currentPath().join('/') + '/';
 
         timestampToReadable(timestamp) {
+            if(isNaN(timestamp)) return "-";
             //return new Date(timestamp * 1000).toUTCString();
             return new Date(timestamp * 1000).toLocaleString('en-GB');
         }
@@ -221,6 +222,8 @@
             ].join("");
         }
         sizeToReadable(size) {
+            if(isNaN(size)) return "-";
+
             var units = [' bytes', ' KB', ' MB', ' GB', ' TB', ' PB', ' EB', ' ZB', ' YB'];
             var unit_index = 0;
             var filesize = size;
