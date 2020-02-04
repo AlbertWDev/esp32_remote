@@ -7,7 +7,7 @@ ___
 
 A web client is provided to interact with the API.
 
-> [Esp32 Remote Management](https://albertwdev.github.io/esp32_remote_management/client)
+> [Esp32 Remote Management](https://albertwdev.github.io/esp32_remote/client)
 
 ___
 ## API RESOURCES

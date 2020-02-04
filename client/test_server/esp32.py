@@ -198,15 +198,27 @@ def get_system_partitions_label(label):
     ## Not found
     abort(404)
 
-@app.route('/v1/system/partitions/<string:label>', methods=['PUT'])
-def put_system_partitions_label(label):
-    if label not in [p['label'] for p in system_partitions]:
+@app.route('/v1/system/partitions', methods=['PUT'])
+def put_system_partitions():
+    partition = next((p for p in system_partitions if p['type'] == 'APP' and 'OTA' in p['subtype'] and not p.get('boot', False)), None)
+    if partition is None:
         abort(404)
 
-    with open(os.path.join('.', f'{label}.bin'), 'wb') as f:
+    with open(os.path.join('.', f"{partition['label']}.bin"), 'wb') as f:
         f.write(request.data)
 
-    return "Upload success"
+    return jsonify(partition)
+
+@app.route('/v1/system/partitions/<string:label>', methods=['PUT'])
+def put_system_partitions_label(label):
+    partition = next((p for p in system.partitions if p['label'] == label), None)
+    if partition is None:
+        abort(404)
+
+    with open(os.path.join('.', f"{partition['label']}.bin"), 'wb') as f:
+        f.write(request.data)
+
+    return jsonify(partition)
 
 @app.route('/v1/system/partitions/<string:label>/boot', methods=['PUT'])
 def put_system_partitions_label_boot(label):

@@ -9,7 +9,6 @@
             }
         .system-partitions-graph-container {
             height: 20px;
-            width: 100%;
             background-color: #9e9e9e;
         }
         .system-partitions-graph-item {
@@ -29,70 +28,121 @@
 
         .mdl-snackbar__text {
             width:100%;
-        }   
+        }
+
+        .mdl-textfield--file > .mdl-textfield__input {
+            box-sizing: border-box;
+            width: calc(100% - 32px);
+        }
+        .mdl-textfield--file > .mdl-button--file {
+                right: 0;
+        }
+        .mdl-button--file > input {
+            cursor: pointer;
+            height: 100%;
+            right: 0;
+            opacity: 0;
+            position: absolute;
+            top: 0;
+            width: 300px;
+            z-index: 4;
+        }
+        #system-partitions-ota__upload {
+            float: right;
+        }
     </style>
-<div class="mdl-grid">
-    <div class="mdl-layout-spacer"></div>
-    <div id="system-partitions-container" class="mdl-card mdl-cell mdl-cell--6-col mdl-shadow--2dp">
-        <table id="system-partitions-list" class="mdl-data-table mdl-js-data-table full-width">
-            <thead>
-                <tr>
-                    <th></th>
-                    <th class="mdl-data-table__cell--non-numeric full-width">Label</th>
-                    <th class="mdl-data-table__cell--non-numeric">Type</th>
-                    <th>Address</th>
-                    <th>Size</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- ko foreach: partitions -->
-                <tr>
-                    <td>
-                        <i data-bind="visible: running()" class="material-icons">dns</i>
-                        <i data-bind="visible: boot()" class="material-icons">power_settings_new</i>
-                    </td>
-                    <td class="mdl-data-table__cell--non-numeric">
-                        <i data-bind="visible: encrypted()" class="material-icons encrypted-icon" role="presentation">https</i>
-                        <span data-bind="text: label"></span>
-                    </td>
-                    <td class="mdl-data-table__cell--non-numeric">
-                        <span data-bind="text: subtype"></span>
-                    </td>
-                    <td>
-                        <span data-bind="text: '0x' + address().toString(16)"></span>
-                    </td>
-                    <td>
-                        <span data-bind="text: '0x' + size().toString(16)"></span>
-                    </td>
-                    <td>
-                        <button data-bind="disable: boot(), visible: type() == 'APP', click: $parent.bootAction" class="mdl-button mdl-js-button mdl-button--icon">
-                            <i class="material-icons">update</i>
-                        </button>
-                        <!-- <button data-bind="visible: type() == 'APP', click: $parent.verifyAction" class="mdl-button mdl-js-button mdl-button--icon">
-                            <i class="material-icons">check_circle_outline</i>
-                        </button> -->
-                        <button data-bind="disable: running(), click: $parent.uploadAction" class="mdl-button mdl-js-button mdl-button--icon">
-                            <i class="material-icons">publish</i>
-                        </button>
-                        <button data-bind="disable: running(), click: $parent.eraseAction" class="mdl-button mdl-js-button mdl-button--icon">
-                            <i class="material-icons">clear</i>
-                        </button>
-                    </td>
-                </tr>
-                <!-- /ko -->
-            </tbody>
-
-            
-        </table>
-
+<div id="system-partitions-container" class="mdl-grid">
+    <div class="mdl-card mdl-cell mdl-cell--8-col mdl-shadow--2dp">
+        <div style="overflow: auto">
+            <table id="system-partitions-list" class="mdl-data-table mdl-js-data-table full-width">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th class="mdl-data-table__cell--non-numeric full-width">Label</th>
+                        <th class="mdl-data-table__cell--non-numeric">Type</th>
+                        <th>Address</th>
+                        <th>Size</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- ko foreach: partitions -->
+                    <tr>
+                        <td>
+                            <i data-bind="visible: running()" class="material-icons">dns</i>
+                            <i data-bind="visible: boot()" class="material-icons">power_settings_new</i>
+                        </td>
+                        <td class="mdl-data-table__cell--non-numeric">
+                            <i data-bind="visible: encrypted()" class="material-icons encrypted-icon" role="presentation">https</i>
+                            <span data-bind="text: label"></span>
+                        </td>
+                        <td class="mdl-data-table__cell--non-numeric">
+                            <span data-bind="text: subtype"></span>
+                        </td>
+                        <td>
+                            <span data-bind="text: '0x' + address().toString(16)"></span>
+                        </td>
+                        <td>
+                            <span data-bind="text: '0x' + size().toString(16)"></span>
+                        </td>
+                        <td>
+                            <button data-bind="disable: boot(), visible: type() == 'APP', click: $parent.bootAction" class="mdl-button mdl-js-button mdl-button--icon">
+                                <i class="material-icons">update</i>
+                            </button>
+                            <!-- <button data-bind="visible: type() == 'APP', click: $parent.verifyAction" class="mdl-button mdl-js-button mdl-button--icon">
+                                <i class="material-icons">check_circle_outline</i>
+                            </button> -->
+                            <button data-bind="disable: running(), click: $parent.uploadAction" class="mdl-button mdl-js-button mdl-button--icon">
+                                <i class="material-icons">publish</i>
+                            </button>
+                            <button data-bind="disable: running(), click: $parent.eraseAction" class="mdl-button mdl-js-button mdl-button--icon">
+                                <i class="material-icons">clear</i>
+                            </button>
+                        </td>
+                    </tr>
+                    <!-- /ko -->
+                </tbody>
+            </table>
+        </div>
         <div class="system-partitions-graph-container">
             <!-- ko foreach: partitions --><!--
             --><span data-bind="style: { width: $root.sizePercentage(size()) }" class="system-partitions-graph-item"></span><!--
             --><!-- /ko -->
         </div>
     </div>
-    <div class="mdl-layout-spacer"></div>
+    <div class="mdl-cell">
+        <div class="mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">System update</h2>
+            </div>
+            
+            <div class="mdl-card__supporting-text">
+                Perform a system update. The board will choose the OTA partition automatically.
+                <form action="">
+                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--file">
+                        <input class="mdl-textfield__input" placeholder="Image file" type="text" id="system-partitions-ota__file-name" readonly/>
+                        <div class="mdl-button mdl-button--primary mdl-button--icon mdl-button--file">
+                            <i class="material-icons">attach_file</i>
+                            <input data-bind="event: { change: $root.otaFileAction }" id="system-partitions-ota__file" type="file" accept=".bin">
+                        </div>
+                    </div>
+                    <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="system-partitions-ota__boot">
+                        <input type="checkbox" id="system-partitions-ota__boot" class="mdl-checkbox__input" checked>
+                        <span class="mdl-checkbox__label">Set as boot partition after upload</span>
+                    </label>
+                    <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="system-partitions-ota__reboot">
+                        <input type="checkbox" id="system-partitions-ota__reboot" class="mdl-checkbox__input" disabled>
+                        <span class="mdl-checkbox__label">Reboot after upload</span>
+                    </label>
+                    <br><br>
+                    <button data-bind="click: $root.otaUploadAction" id="system-partitions-ota__upload" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" disabled>
+                        Upload
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
     <div id="system-partitions-upload-snackbar" class="mdl-js-snackbar mdl-snackbar">
         <div class="mdl-snackbar__text"></div>
         <button class="mdl-snackbar__action" type="button"></button>
@@ -117,6 +167,8 @@
 <script type="text/javascript">
     var SystemPartitions = class {
         constructor() {
+            componentHandler.upgradeElements($('.mdl-js-checkbox').get());
+
             this.endpoint = '/system/partitions';
             this.partitions = ko.observableArray();
             this.total_size = 0x400000;
@@ -155,12 +207,12 @@
             });
         }
 
-        upload(label, content) {
+        upload(label, content, done_callback, fail_callback) {
             componentHandler.upgradeElements($('.mdl-snackbar').get());
 
             var snackbar = $('#system-partitions-upload-snackbar')[0];
             var data = {
-                message: `Updating ${label}...`,
+                message: label ? `Updating ${label}` : 'System update',
                 timeout: 2147483647,
                 actionHandler: (e) => {
                     if(snackbar.MaterialSnackbar.cleanup_) snackbar.MaterialSnackbar.cleanup_();
@@ -170,26 +222,28 @@
             };
             snackbar.MaterialSnackbar.showSnackbar(data);
 
-            api_request(`${this.endpoint}/${label}`, 'PUT',
+            api_request(label ? `${this.endpoint}/${label}` : this.endpoint, 'PUT',
                 content, true,
                 (e) => {
                     if(e.lengthComputable) {
                         var uploadPercent = parseFloat((100 * e.loaded/e.total).toFixed(2)) + '%';
                         $('.mdl-snackbar__text')[0].innerHTML = 
-                                uploadPercent +
-                                '<div style="margin-top:3px; line-height:0; font-size:0; height:5px; width:100%; background:white">' +
-                                    '<span style="display:inline-block; height:100%; background:red; width:' + uploadPercent + '"></span>'+
-                                '</div>';
-                        
-                        if(e.loaded/e.total >= 1.0) {
-                            setTimeout(() => {
-                                if(snackbar.MaterialSnackbar.cleanup_) snackbar.MaterialSnackbar.cleanup_();
-                                else snackbar.classList.remove("mdl-snackbar--active");
-                            }, 800);
-                        }
+                            (label ? `Updating ${label} (` : 'System update (') + uploadPercent +
+                            ')<div style="margin-top:3px; line-height:0; font-size:0; height:5px; width:100%; background:white">' +
+                                '<span style="display:inline-block; height:100%; background:#3F51B5; width:' + uploadPercent + '"></span>'+
+                            '</div>';
                     }
                 }
-            ).done(() => {});
+            ).done((data) => {
+                setTimeout(() => {
+                    if(snackbar.MaterialSnackbar.cleanup_) snackbar.MaterialSnackbar.cleanup_();
+                    else snackbar.classList.remove("mdl-snackbar--active");
+                }, 800);
+                if(done_callback) done_callback(data);
+            }).fail((data) => {
+                $('.mdl-snackbar__text')[0].innerHTML = label ? `${label} update failed` : 'System update failed';
+                if(fail_callback) fail_callback(data);
+            });
         }
         
         erase(partition) {
@@ -217,6 +271,33 @@
         eraseAction = (partition) => {
             system_partitions_erase.updateContent(partition);
             $('#system-partitions__erase')[0].showModal();
+        }
+
+        otaFileAction = (self, evt) => {
+            $('#system-partitions-ota__file-name')[0].value = evt.target.files[0].name;
+            $('#system-partitions-ota__upload').prop('disabled', false);
+        }
+
+        otaUploadAction = () => {
+            $("#system-partitions-ota__upload").prop('disabled', true);
+            var file = $("#system-partitions-ota__file")[0].files[0];
+            var setBoot = $("#system-partitions-ota__boot").prop('checked');
+            if(file) {
+                this.upload(null, file,
+                (uploaded_partition) => {
+                    $("#system-partitions-ota__upload").prop('disabled', false);
+                    if(setBoot) {
+                        var partition = this.partitions().find(partition => partition.label() == uploaded_partition.label);
+                        if(partition)
+                            this.setBoot(partition);
+                        else
+                            console.log("Error: Uploaded partition is not in the list")
+                    }
+                },
+                (error) => {
+                    $("#system-partitions-ota__upload").prop('disabled', false);
+                });
+            }
         }
     }
 
