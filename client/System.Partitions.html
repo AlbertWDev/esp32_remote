@@ -197,6 +197,7 @@
                         running: ko.observable(partition['running'])
                     });
                 });
+                this.partitions.sort(function (a, b) { return a.address() < b.address() ? -1/*a*/ : 1/*b*/ })
             });
         }
 
