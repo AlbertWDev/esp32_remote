@@ -15,6 +15,7 @@
 #include "driver/sdspi_host.h"
 
 #include "remote_management.h"
+#include "headers.h"
 #include "wifi_manager.h"
 
 #include <esp_log.h>
@@ -27,6 +28,11 @@
 
 static const char *TAG = "MAIN";
 
+esp_err_t _get_battery(httpd_req_t* req) {
+    APPLY_HEADERS(req);
+    httpd_resp_sendstr(req, "{\"level\":50.0}");
+    return ESP_OK;
+}
 
 void app_main() {
     // Initialize SPIFFS
@@ -83,7 +89,16 @@ void app_main() {
         .prvtkey = prvtkey_pem_start,
         .prvtkey_len = prvtkey_pem_end - prvtkey_pem_start
     };
-    rmgmt_init(&ssl_certs);
+    const size_t user_endpoints_len = 1;
+    const httpd_uri_t user_endpoints[] = {
+        /*** System.Battery ***/
+        {
+            .uri        = "/v1/system/battery/?",
+            .method     = HTTP_GET,
+            .handler    = _get_battery
+        }
+    };
+    rmgmt_init(&ssl_certs, user_endpoints, user_endpoints_len);
 
     wm_config_t wm_config = {
         .ap_ssid = "esp32_testing",

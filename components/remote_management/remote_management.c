@@ -48,7 +48,7 @@ static void _disconnect_handler(void* arg, esp_event_base_t event_base,
 }
 
 
-esp_err_t rmgmt_init(ssl_certs_t* ssl_certs) {
+esp_err_t rmgmt_init(ssl_certs_t* ssl_certs, const httpd_uri_t* user_endpoints, size_t user_endpoints_len) {
     rmgmt_release();
 
     esp_err_t err;
@@ -56,14 +56,21 @@ esp_err_t rmgmt_init(ssl_certs_t* ssl_certs) {
     // Initialize remote management server
     _rmgmt_server = (rmgmt_server_t*)malloc(sizeof(rmgmt_server_t));
     _rmgmt_server->server_handle = NULL;
-    _rmgmt_server->endpoints = _rmgmt_endpoints;
-    _rmgmt_server->endpoints_len = _rmgmt_endpoints_len;
 
     if(ssl_certs == NULL) {
         _rmgmt_server->ssl_certs = NULL;
     } else {
         _rmgmt_server->ssl_certs = (ssl_certs_t*)malloc(sizeof(ssl_certs_t));
         memcpy(_rmgmt_server->ssl_certs, ssl_certs, sizeof(ssl_certs_t));
+    }
+
+    if(user_endpoints_len == 0 || user_endpoints == NULL) {
+        _rmgmt_server->endpoints = NULL;
+        _rmgmt_server->endpoints_len = 0;
+    } else {
+        _rmgmt_server->endpoints = (httpd_uri_t*)malloc(user_endpoints_len * sizeof(httpd_uri_t));
+        memcpy(_rmgmt_server->endpoints, user_endpoints, user_endpoints_len * sizeof(httpd_uri_t));
+        _rmgmt_server->endpoints_len = user_endpoints_len;
     }
 
     // Setup event loop
@@ -86,10 +93,15 @@ void rmgmt_release() {
         // Free SSL certs memory
         if(_rmgmt_server->ssl_certs != NULL)
             free(_rmgmt_server->ssl_certs);
+        // Free endpoints memory
+        if(_rmgmt_server->endpoints != NULL)
+            free(_rmgmt_server->endpoints);
         // Free RemoteManagementServer memory
         free(_rmgmt_server);
         _rmgmt_server = NULL;
     }
+    esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, &_connect_handler);
+    esp_event_handler_unregister(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &_disconnect_handler);
 }
 
 esp_err_t _rmgmt_options_cors(httpd_req_t *req) {
@@ -110,7 +122,7 @@ esp_err_t rmgmt_start(rmgmt_server_t* rmgmt_server) {
 
     httpd_ssl_config_t conf = HTTPD_SSL_CONFIG_DEFAULT();
     conf.httpd.uri_match_fn = _uri_match;
-    conf.httpd.max_uri_handlers = _rmgmt_endpoints_len + 1;
+    conf.httpd.max_uri_handlers = _rmgmt_endpoints_len + rmgmt_server->endpoints_len + 1;
 
     if(rmgmt_server->ssl_certs == NULL) {
         conf.transport_mode = HTTPD_SSL_TRANSPORT_INSECURE;
@@ -120,19 +132,16 @@ esp_err_t rmgmt_start(rmgmt_server_t* rmgmt_server) {
         conf.prvtkey_pem = rmgmt_server->ssl_certs->prvtkey;
         conf.prvtkey_len = rmgmt_server->ssl_certs->prvtkey_len;
     }
-    /*extern const unsigned char cacert_pem_start[] asm("_binary_cacert_pem_start");
-    extern const unsigned char cacert_pem_end[]   asm("_binary_cacert_pem_end");
-    conf.cacert_pem = cacert_pem_start;
-    conf.cacert_len = cacert_pem_end - cacert_pem_start;
-
-    extern const unsigned char prvtkey_pem_start[] asm("_binary_prvtkey_pem_start");
-    extern const unsigned char prvtkey_pem_end[]   asm("_binary_prvtkey_pem_end");
-    conf.prvtkey_pem = prvtkey_pem_start;
-    conf.prvtkey_len = prvtkey_pem_end - prvtkey_pem_start;*/
 
     ret = httpd_ssl_start(&rmgmt_server->server_handle, &conf);
     if(ret != ESP_OK) return ret;
     
+    for(int i = 0; i < _rmgmt_endpoints_len; i++) {
+        ESP_LOGI(TAG, "Registering URI: %s", _rmgmt_endpoints[i].uri);
+        ret = httpd_register_uri_handler(rmgmt_server->server_handle, &_rmgmt_endpoints[i]);
+        if(ret != ESP_OK) return ret;
+    }
+
     for(int i = 0; i < rmgmt_server->endpoints_len; i++) {
         ESP_LOGI(TAG, "Registering URI: %s", rmgmt_server->endpoints[i].uri);
         ret = httpd_register_uri_handler(rmgmt_server->server_handle, &rmgmt_server->endpoints[i]);

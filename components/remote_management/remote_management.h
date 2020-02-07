@@ -15,7 +15,7 @@ extern const httpd_uri_t _rmgmt_endpoints[];
 
 typedef struct rmgmt_server_t {
     httpd_handle_t server_handle;
-    const httpd_uri_t* endpoints;
+    httpd_uri_t* endpoints;
     size_t endpoints_len;
     ssl_certs_t* ssl_certs;
 } rmgmt_server_t;
@@ -24,7 +24,7 @@ typedef struct rmgmt_server_t {
 /*
  * Initialize the Remote Management API
  */
-esp_err_t rmgmt_init(ssl_certs_t* ssl_certs);
+esp_err_t rmgmt_init(ssl_certs_t* ssl_certs, const httpd_uri_t* user_endpoints, size_t user_endpoints_len);
 void rmgmt_release();
 
 esp_err_t rmgmt_start(rmgmt_server_t* rmgmt_server);
