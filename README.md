@@ -14,8 +14,11 @@ ___
 
 - **SYSTEM**
     - `System.Info`
+    - `System.Ram`
+    - `System.Reboot`
+    - `System.Tasks`
     - `System.Partitions`
-<!--    - `System.Tasks` -->
+
 - **NETWORK**
     - **WIFI**
         - `Network.WiFi.Storage`
@@ -31,15 +34,17 @@ ___
 
 | Attribute            | Type    | Description                       |
 |----------------------|---------|-----------------------------------|
-| **`chip_model`**     | String  | Chip model                        |
-| **`chip_revision`**  | Integer | Chip revision number              |
-| **`chip_cores`**     | Integer | Number of CPU cores in the chip   |
-| **`chip_emb_flash`** | Boolean | Chip has embedded flash memory    |
-| **`chip_wifi_bgn`**  | Boolean | Chip has 2.4GHz WiFi              |
-| **`chip_bt`**        | Boolean | Chip has Bluetooth Classic        |
-| **`chip_ble`**       | Boolean | Chip has Bluetooth LE             |
-| **`idf_ver`**        | String  | IDF version as in 'git describe'  |
-| **`free_heap`**      | Integer | Size of available heap (in bytes) |
+| **`chip`**           | Object  | Chip info                         |
+| **`chip.model`**     | String  | Chip model                        |
+| **`chip.revision`**  | Integer | Chip revision number              |
+| **`chip.cores`**     | Integer | Number of CPU cores in the chip   |
+| **`chip.emb_flash`** | Boolean | Chip has embedded flash memory    |
+| **`chip.wifi_bgn`**  | Boolean | Chip has 2.4GHz WiFi              |
+| **`chip.bt`**        | Boolean | Chip has Bluetooth Classic        |
+| **`chip.ble`**       | Boolean | Chip has Bluetooth LE             |
+| **`idf`**            | String  | IDF version as in 'git describe'  |
+| **`hostname`**       | String  | Hotsname of STA interface         |
+| **`mac`**            | String  | System base MAC address           |
 
 #### Endpoints
 
@@ -47,6 +52,47 @@ ___
 |----------------------------------|-------------|----------------------|
 | `/v1/system/info/`               | **GET**     | Retrieve system info |
 
+
+
+## **`System.Ram`**
+> RAM size and usage
+
+| Attribute            | Type    | Description                       |
+|----------------------|---------|-----------------------------------|
+| **`total_heap`**     | Integer | Total size of heap (in bytes)     |
+| **`free_heap`**      | Integer | Size of available heap (in bytes) |
+
+#### Endpoints
+
+| URI                              | HTTP method | Description          |
+|----------------------------------|-------------|----------------------|
+| `/v1/system/ram/`                | **GET**     | Retrieve RAM info    |
+
+
+
+## **`System.Reboot`**
+> Reboot board
+
+#### Endpoints
+
+| URI                              | HTTP method | Description          |
+|----------------------------------|-------------|----------------------|
+| `/v1/system/reboot/`             | **GET**     | Reboot board         |
+
+
+
+## **`System.Tasks`**
+> Tasks list
+
+| Attribute            | Type    | Description                       |
+|----------------------|---------|-----------------------------------|
+| **``**               |         |                                   |
+
+#### Endpoints
+
+| URI                              | HTTP method | Description          |
+|----------------------------------|-------------|----------------------|
+| `/v1/system/tasks/`              | **GET**     | Retrieve tasks list  |
 
 
 ## **`System.Partitions`**
