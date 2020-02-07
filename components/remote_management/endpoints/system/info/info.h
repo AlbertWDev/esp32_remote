@@ -8,3 +8,5 @@
 #include <esp_system.h>
 
 esp_err_t _rmgmt_get_system_info(httpd_req_t *req);
+esp_err_t _rmgmt_get_system_ram(httpd_req_t *req);
+esp_err_t _rmgmt_get_system_reboot(httpd_req_t *req);

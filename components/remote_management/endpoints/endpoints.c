@@ -7,13 +7,23 @@
 #include "storage/storage.h"
 //#include "gpio/gpio.h"
 
-const size_t _rmgmt_endpoints_len = 20;
+const size_t _rmgmt_endpoints_len = 23;
 const httpd_uri_t _rmgmt_endpoints[] = {
-    /*** System.Info ***/
+    /*** System ***/
     {
         .uri        = "/v1/system/info/?",
         .method     = HTTP_GET,
         .handler    = _rmgmt_get_system_info
+    },
+    {
+        .uri        = "/v1/system/ram/?",
+        .method     = HTTP_GET,
+        .handler    = _rmgmt_get_system_ram
+    },
+    {
+        .uri        = "/v1/system/reboot/?",
+        .method     = HTTP_GET,
+        .handler    = _rmgmt_get_system_reboot
     },
     /*** System.Partitions ***/
     {
