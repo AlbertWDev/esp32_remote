@@ -1,4 +1,5 @@
 import os
+import random
 from stat import ST_MODE, ST_MTIME, ST_SIZE
 
 from flask import Flask
@@ -6,6 +7,29 @@ from flask import jsonify, abort, request, send_from_directory
 from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
+
+@app.route('/v1/system/info', methods=['GET'])
+def get_system_info():
+    return jsonify({
+        'chip': {
+            'model': 'esp32',
+            'revision': 1,
+            'emb_flash': False,
+            'wifi_bgn': True,
+            'bt': True,
+            'ble': True
+        },
+        'idf': 'v0.0-test',
+        'hostname': 'test_server',
+        'mac': 'FF:FF:FF:00:00:00'
+    })
+
+@app.route('/v1/system/ram', methods=['GET'])
+def get_system_ram():
+    return jsonify({
+        'heap_total': 293808,
+        'heap_free': 190000 - random.randint(100, 150000)
+    })
 
 
 network_wifi_storage = [

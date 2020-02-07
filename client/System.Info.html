@@ -1,19 +1,168 @@
 <!--  CONTENT -->
-<div class="mdl-grid">
-    <div class="mdl-layout-spacer"></div>
-    <div class="mdl-card mdl-cell mdl-cell--4-col mdl-shadow--2dp">
+<style>
+    .system-about-key {
+        font-weight: bold;
+        text-align: right;
+        padding-right: 10px;
+    }
+</style>
+<div id="system-info-container" class="mdl-grid">
+    <div class="mdl-cell mdl-cell--3-col mdl-cell--4-col-tablet mdl-card mdl-shadow--2dp">
         <div class="mdl-card__title">
-            <h2 class="mdl-card__title-text">System Info</h2>
+            <h2 class="mdl-card__title-text">About</h2>
         </div>
         <div class="mdl-card__supporting-text">
-            Not implemented
+            <table>
+                <tbody>
+                <tr>
+                    <td class="system-about-key">Hostname</td>
+                    <td data-bind="text: hostname"></td>
+                </tr>
+                <tr>
+                    <td class="system-about-key">Chip</td>
+                    <td>
+                        <span data-bind="text: chip.model"></span>
+                        <span data-bind="visible: chip.revision()"> (rev. <span data-bind="text: chip.revision"></span>)</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        <i data-bind="style: { color: chip.emb_flash() ? '#000000' : '#AAAAAA' }" class="material-icons">memory</i>
+                        <i data-bind="style: { color: chip.wifi_bgn() ? '#000000' : '#AAAAAA' }" class="material-icons">wifi</i>
+                        <i data-bind="style: { color: chip.bt() ? '#000000' : '#AAAAAA' }" class="material-icons">bluetooth</i>
+                        <i data-bind="style: { color: chip.ble() ? '#000000' : '#AAAAAA' }" class="material-icons">bluetooth_audio</i>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="system-about-key">IDF version</td>
+                    <td data-bind="text: idf_version"></td>
+                </tr>
+                <tr>
+                    <td class="system-about-key">Base MAC</td>
+                    <td data-bind="text: mac"></td>
+                </tr>
+            </tbody>
+            </table>
+        </div>
+        <div class="mdl-card__actions mdl-card--border">
+            <button class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+              Reboot
+            </button>
         </div>
     </div>
-    <div class="mdl-layout-spacer"></div>
+    
+    <div class="mdl-cell mdl-cell--2-col mdl-cell--4-col-tablet">
+        <div class="mdl_card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Memory</h2>
+            </div>
+            <div class="mdl-card__supporting-text" style="width:auto">
+                <span>Used: <span data-bind="text: $root.sizeToReadable(ram_total() - ram_free())">
+                </span> / <span data-bind="text: $root.sizeToReadable(ram_total())"></span></span>
+                <div style="margin-top:3px;line-height:0; font-size:0; height:5px; width:100%; background:#AAAAAA">
+                    <span data-bind="style: { width: (100 - 100*ram_free()/ram_total()) + '%'}" style="display:inline-block; height:100%; background:#3F51B5;"></span>
+                </div>
+            </div>
+        </div>
+        <div data-bind="visible: battery_level()" class="mdl_card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Battery</h2>
+            </div>
+            <div class="mdl-card__supporting-text" style="width:auto">
+                <span><span data-bind="text: battery_level"></span>%</span>
+                <div style="margin-top:3px;line-height:0; font-size:0; height:5px; width:100%; background:#AAAAAA">
+                    <span data-bind="style: { width: battery_level() + '%'}" style="display:inline-block; height:100%; background:rgb(55, 207, 93);"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="mdl-cell mdl-cell--7-col">
+        <div class="mdl_card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Task Manager</h2>
+            </div>
+            <div class="mdl-card__supporting-text" >
+                
+            </div>
+        </div>
+    </div>
 </div>
 <!--  /CONTENT -->
 
 
 <script type="text/javascript">
+    var SystemInfo = class {
+        constructor() {
+            this.endpoint = '/system/info';
+            this.chip = {
+                model: ko.observable(''),
+                revision: ko.observable(null),
+                cores: ko.observable(null),
+                emb_flash: ko.observable(false),
+                wifi_bgn: ko.observable(false),
+                bt: ko.observable(false),
+                ble: ko.observable(false)
+            };
+            this.idf_version = ko.observable('');
+            this.hostname = ko.observable('');
+            this.mac = ko.observable('');
 
+            this.ram_free = ko.observable(0);
+            this.ram_total = ko.observable(0);
+
+            this.battery_level = ko.observable(undefined);
+
+            setOnConnectCallback(() => { this.refresh(); this.refresh_ram(); this.refresh_battery(); });
+            this.refresh();
+            this.refresh_ram();
+            this.refresh_battery();
+        }
+
+        refresh() {
+            if(!connection_manager.isConnected()) return;
+            api_request(this.endpoint, 'GET').done((system_info) => {
+                this.idf_version(system_info.idf);
+                this.hostname(system_info.hostname);
+                this.mac(system_info.mac);
+
+                this.chip.model(system_info.chip.model);
+                this.chip.revision(system_info.chip.revision);
+                this.chip.emb_flash(system_info.chip.emb_flash);
+                this.chip.wifi_bgn(system_info.chip.wifi_bgn);
+                this.chip.bt(system_info.chip.bt);
+                this.chip.ble(system_info.chip.ble);
+            });
+        }
+        refresh_ram() {
+            if(!connection_manager.isConnected()) return;
+            api_request('/system/ram', 'GET').done((ram) => {
+                this.ram_free(ram.heap_free);
+                this.ram_total(ram.heap_total);
+            });
+        }
+        refresh_battery() {
+            if(!connection_manager.isConnected()) return;
+            api_request('/system/battery', 'GET').done((battery) => {
+                this.battery_level(battery.level);
+            });
+        }
+
+        sizeToReadable(size) {
+            if(isNaN(size)) return "-";
+
+            var units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+            var unit_index = 0;
+            var filesize = size;
+            while(filesize >= 1024) {
+                filesize /= 1024;
+                unit_index++;
+            }
+            return Math.round(filesize) + units[unit_index];
+        };
+    }
+
+    // System
+    var system_info = new SystemInfo();
+    ko.applyBindings(system_info, $('#system-info-container')[0]);
 </script>
