@@ -1,40 +1,56 @@
-#include <esp_wifi.h>
-#include <esp_event.h>
-#include <esp_log.h>
-#include <esp_system.h>
-#include <nvs_flash.h>
-#include <sys/param.h>
-#include "tcpip_adapter.h"
-#include "esp_eth.h"
-
-#include <esp_vfs.h>
-#include <esp_spiffs.h>
-
-#include "esp_vfs_fat.h"
-#include "driver/sdmmc_host.h"
-#include "driver/sdspi_host.h"
-
-#include "remote_management.h"
-#include "headers.h"
-#include "wifi_manager.h"
-
-#include <esp_log.h>
-
+//#define SD_CARD
 #define PIN_NUM_MISO 19
 #define PIN_NUM_MOSI 23
 #define PIN_NUM_CLK  18
 #define PIN_NUM_CS   4
 
 
+#include "wifi_manager.h"
+#include "remote_management.h"
+#include "endpoints/utils.h"
+
+#include "battery_monitor.h"
+#include "cJSON.h"
+
+#include <esp_log.h>
+
+#include <esp_vfs.h>
+#include <esp_spiffs.h>
+
+#ifdef SD_CARD
+#include <esp_vfs_fat.h>
+#include <driver/sdmmc_host.h>
+#include <driver/sdspi_host.h>
+#endif
+
 static const char *TAG = "MAIN";
 
+bat_reading_t battery_current_reading = { 0 };
+
+void on_battery_event(bat_reading_t* battery_reading) {
+    memcpy(&battery_current_reading, battery_reading, sizeof(bat_reading_t));
+}
+
 esp_err_t _get_battery(httpd_req_t* req) {
-    APPLY_HEADERS(req);
-    httpd_resp_sendstr(req, "{\"level\":50.0}");
+    ALLOW_CORS(req);
+    
+    cJSON *battery = cJSON_CreateObject();
+    cJSON_AddNumberToObject(battery, "level", battery_current_reading.level);
+    cJSON_AddNumberToObject(battery, "voltage", battery_current_reading.voltage);
+    cJSON_AddNumberToObject(battery, "raw", battery_current_reading.raw);
+
+    const char *battery_json = cJSON_Print(battery);
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_sendstr(req, battery_json);
+
+    free((void *)battery_json);
+    cJSON_Delete(battery);
     return ESP_OK;
 }
 
 void app_main() {
+    battery_init(on_battery_event);
+
     // Initialize SPIFFS
     esp_vfs_spiffs_conf_t conf = {
       .base_path = "/spiffs",
@@ -53,6 +69,7 @@ void app_main() {
         }
     }
     
+#ifdef SD_CARD
     // Initialize SD card
     sdmmc_host_t host = SDSPI_HOST_DEFAULT();
     host.slot = VSPI_HOST;
@@ -77,6 +94,7 @@ void app_main() {
             ESP_LOGE(TAG, "Failed to initialize the card (%s).", esp_err_to_name(ret));
         }
     }
+#endif
 
 
     extern const unsigned char cacert_pem_start[] asm("_binary_cacert_pem_start");
