@@ -42,6 +42,10 @@
                     <td class="system-about-key">Base MAC</td>
                     <td data-bind="text: mac"></td>
                 </tr>
+                <tr>
+                    <td class="system-about-key">Uptime</td>
+                    <td data-bind="text: $root.timeToReadable(time())"></td>
+                </tr>
             </tbody>
             </table>
         </div>
@@ -107,6 +111,7 @@
             this.idf_version = ko.observable('');
             this.hostname = ko.observable('');
             this.mac = ko.observable('');
+            this.time = ko.observable(0);
 
             this.ram_free = ko.observable(0);
             this.ram_total = ko.observable(0);
@@ -125,6 +130,7 @@
                 this.idf_version(system_info.idf);
                 this.hostname(system_info.hostname);
                 this.mac(system_info.mac);
+                this.time(system_info.time);
 
                 this.chip.model(system_info.chip.model);
                 this.chip.revision(system_info.chip.revision);
@@ -146,6 +152,22 @@
             api_request('/system/battery', 'GET').done((battery) => {
                 this.battery_level(battery.level);
             });
+        }
+
+        timeToReadable(time_us) {
+            var seconds = time_us/1000000;
+	        var d = Math.floor(seconds / (3600*24));
+            var h = Math.floor(seconds % (3600*24) / 3600);
+            var m = Math.floor(seconds % 3600 / 60);
+            var s = Math.floor(seconds % 60);
+            var ms = Math.floor(time_us % 1000000 / 1000);
+
+            var time_str = (d > 0) ? ("0" + d).slice(-2) + ":" : "";
+            time_str += (h > 0 || d > 0) ? ("0" + h).slice(-2) + ":" : "";
+            time_str += (m > 0 || h > 0 || d > 0) ? ("0" + m).slice(-2) + ":" : "";
+            time_str += ("0" + s).slice(-2) + "." + ("00" + ms).slice(-3);
+            
+            return time_str;
         }
 
         sizeToReadable(size) {
