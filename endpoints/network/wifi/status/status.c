@@ -36,17 +36,17 @@ esp_err_t _rmgmt_get_network_wifi_status(httpd_req_t *req) {
     cJSON_AddBoolToObject(root, "init", (init = (ret != ESP_ERR_WIFI_NOT_INIT)));
 
     if(!init)
-        cJSON_AddStringToObject(root, "mode", "WIFI_MODE_NULL");
+        cJSON_AddStringToObject(root, "mode", "NULL");
     else {
         switch (mode) {
             case WIFI_MODE_NULL:
-                cJSON_AddStringToObject(root, "mode", "WIFI_MODE_NULL"); break;
+                cJSON_AddStringToObject(root, "mode", "NULL"); break;
             case WIFI_MODE_STA:
-                cJSON_AddStringToObject(root, "mode", "WIFI_MODE_STA"); break;
+                cJSON_AddStringToObject(root, "mode", "STA"); break;
             case WIFI_MODE_AP:
-                cJSON_AddStringToObject(root, "mode", "WIFI_MODE_AP"); break;
+                cJSON_AddStringToObject(root, "mode", "AP"); break;
             case WIFI_MODE_APSTA:
-                cJSON_AddStringToObject(root, "mode", "WIFI_MODE_APSTA"); break;
+                cJSON_AddStringToObject(root, "mode", "APSTA"); break;
             default:
                 cJSON_AddStringToObject(root, "mode", "unknown"); break;
         }
