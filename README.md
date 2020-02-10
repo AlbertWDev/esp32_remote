@@ -45,6 +45,7 @@ ___
 | **`idf`**            | String  | IDF version as in 'git describe'  |
 | **`hostname`**       | String  | Hotsname of STA interface         |
 | **`mac`**            | String  | System base MAC address           |
+| **`time`**           | Integer | Time since boot (microseconds)    |
 
 #### Endpoints
 
@@ -172,7 +173,7 @@ ___
 | URI                        | HTTP method | Description                   |
 |----------------------------|-------------|-------------------------------|
 | `/v1/network/wifi/status/` | **GET**     | Get board WiFi network status |
-| `/v1/network/wifi/status/` | **PUT**     | Update WiFi network status    ![](https://img.shields.io/badge/-WIP-blue) <br><ul><li>Start/Stop AP</li><li>Change STA connected network</li><li>Change AP settings</li></ul> |
+| `/v1/network/wifi/status/` | **POST**    | Update WiFi network status    ![](https://img.shields.io/badge/-WIP-blue) <br><ul><li>Start/Stop AP</li><li>Change STA connected network</li><li>Change AP settings</li></ul> |
 
 
 

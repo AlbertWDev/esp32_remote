@@ -24,7 +24,7 @@ void _fill_chip_info(cJSON* chip_info_json) {
 }
 
 esp_err_t _rmgmt_get_system_info(httpd_req_t *req) {
-    APPLY_HEADERS(req);
+    ALLOW_CORS(req);
     
     cJSON *sys_info = cJSON_CreateObject();
 
@@ -49,6 +49,9 @@ esp_err_t _rmgmt_get_system_info(httpd_req_t *req) {
     sprintf(mac_str, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     cJSON_AddStringToObject(sys_info, "mac", mac_str);
 
+    // TIME
+    cJSON_AddNumberToObject(sys_info, "time", esp_timer_get_time());
+
 
     const char *sys_info_json = cJSON_Print(sys_info);
     httpd_resp_set_type(req, "application/json");
@@ -60,7 +63,7 @@ esp_err_t _rmgmt_get_system_info(httpd_req_t *req) {
 }
 
 esp_err_t _rmgmt_get_system_ram(httpd_req_t *req) {
-    APPLY_HEADERS(req);
+    ALLOW_CORS(req);
 
     cJSON* ram = cJSON_CreateObject();
     cJSON_AddNumberToObject(ram, "heap_free", esp_get_free_heap_size());
@@ -77,7 +80,7 @@ esp_err_t _rmgmt_get_system_ram(httpd_req_t *req) {
 }
 
 esp_err_t _rmgmt_get_system_reboot(httpd_req_t *req) {
-    APPLY_HEADERS(req);
+    ALLOW_CORS(req);
     httpd_resp_send(req, NULL, 0);
 
     esp_restart();

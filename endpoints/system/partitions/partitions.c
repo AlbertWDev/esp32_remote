@@ -201,7 +201,7 @@ esp_err_t _ota_update_data_partition(const esp_partition_t* partition, httpd_req
 }
 
 esp_err_t _rmgmt_get_system_partitions(httpd_req_t *req) {
-    APPLY_HEADERS(req);
+    ALLOW_CORS(req);
     esp_err_t ret;
 
     httpd_resp_set_type(req, "application/json");
@@ -245,7 +245,7 @@ esp_err_t _rmgmt_get_system_partitions(httpd_req_t *req) {
 }
 
 esp_err_t _rmgmt_get_system_partitions_label(httpd_req_t *req) {
-    APPLY_HEADERS(req);
+    ALLOW_CORS(req);
     esp_err_t ret;
     
     char label[PARTITION_LABEL_MAX_LENGTH];
@@ -276,7 +276,7 @@ esp_err_t _rmgmt_get_system_partitions_label(httpd_req_t *req) {
 }
 
 esp_err_t _rmgmt_get_system_partitions_label_sha256(httpd_req_t *req) {
-    APPLY_HEADERS(req);
+    ALLOW_CORS(req);
     esp_err_t ret;
 
     // Get label from URI
@@ -326,7 +326,7 @@ esp_err_t _rmgmt_get_system_partitions_label_sha256(httpd_req_t *req) {
 }
 
 esp_err_t _rmgmt_put_system_partitions(httpd_req_t *req) {
-    APPLY_HEADERS(req);
+    ALLOW_CORS(req);
     esp_err_t ret;
 
     const esp_partition_t* partition = esp_ota_get_next_update_partition(NULL);
@@ -353,7 +353,7 @@ esp_err_t _rmgmt_put_system_partitions(httpd_req_t *req) {
 }
 
 esp_err_t _rmgmt_put_system_partitions_label(httpd_req_t *req) {
-    APPLY_HEADERS(req);
+    ALLOW_CORS(req);
     esp_err_t ret;
 
     char label[PARTITION_LABEL_MAX_LENGTH];
@@ -389,7 +389,7 @@ esp_err_t _rmgmt_put_system_partitions_label(httpd_req_t *req) {
 }
 
 esp_err_t _rmgmt_put_system_partitions_label_boot(httpd_req_t *req) {
-    APPLY_HEADERS(req);
+    ALLOW_CORS(req);
     esp_err_t ret;
 
     // Get label from URI
@@ -419,14 +419,14 @@ esp_err_t _rmgmt_put_system_partitions_label_boot(httpd_req_t *req) {
 }
 
 esp_err_t _rmgmt_post_system_partitions_label_validate(httpd_req_t *req) {
-    APPLY_HEADERS(req);
+    ALLOW_CORS(req);
 
     httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Not implemented");
     return ESP_FAIL;
 }
 
 esp_err_t _rmgmt_delete_system_partitions_label(httpd_req_t *req) {
-    APPLY_HEADERS(req);
+    ALLOW_CORS(req);
     esp_err_t ret;
 
     // Get label from URI

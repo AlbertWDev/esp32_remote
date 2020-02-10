@@ -100,8 +100,8 @@ const httpd_uri_t _rmgmt_endpoints[] = {
     },
     {
         .uri        = "/v1/network/wifi/status/?",
-        .method     = HTTP_PUT,
-        .handler    = _rmgmt_put_network_wifi_status
+        .method     = HTTP_POST,
+        .handler    = _rmgmt_post_network_wifi_status
     },
     /*** Storage ***/
     {

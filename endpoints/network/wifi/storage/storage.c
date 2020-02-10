@@ -95,7 +95,7 @@ cJSON* _get_network_json(wm_network_info_t* network) {
 }
 
 esp_err_t _rmgmt_get_network_wifi_storage(httpd_req_t *req) {
-    APPLY_HEADERS(req);
+    ALLOW_CORS(req);
     esp_err_t ret;
     
     cJSON *network_list = cJSON_CreateArray();
@@ -123,7 +123,7 @@ esp_err_t _rmgmt_get_network_wifi_storage(httpd_req_t *req) {
 }
 
 esp_err_t _rmgmt_get_network_wifi_storage_ssid(httpd_req_t *req) {
-    APPLY_HEADERS(req);
+    ALLOW_CORS(req);
     esp_err_t ret;
 
     char ssid[NETWORK_SSID_MAX_LENGTH];
@@ -161,7 +161,7 @@ esp_err_t _rmgmt_get_network_wifi_storage_ssid(httpd_req_t *req) {
 }
 
 esp_err_t _rmgmt_post_network_wifi_storage(httpd_req_t *req) {
-    APPLY_HEADERS(req);
+    ALLOW_CORS(req);
     esp_err_t ret;
 
     wm_network_info_t network;
@@ -187,14 +187,14 @@ esp_err_t _rmgmt_post_network_wifi_storage(httpd_req_t *req) {
 }
 
 esp_err_t _rmgmt_put_network_wifi_storage_ssid(httpd_req_t *req) {
-    APPLY_HEADERS(req);
+    ALLOW_CORS(req);
 
     httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Not implemented");
     return ESP_OK;
 }
 
 esp_err_t _rmgmt_delete_network_wifi_storage_ssid(httpd_req_t *req) {
-    APPLY_HEADERS(req);
+    ALLOW_CORS(req);
     esp_err_t ret;
 
     char ssid[NETWORK_SSID_MAX_LENGTH];

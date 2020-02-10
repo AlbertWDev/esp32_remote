@@ -22,7 +22,7 @@ esp_err_t fill_ip_address(tcpip_adapter_if_t tcpip_if, cJSON* node) {
 }
 
 esp_err_t _rmgmt_get_network_wifi_status(httpd_req_t *req) {
-    APPLY_HEADERS(req);
+    ALLOW_CORS(req);
     esp_err_t ret;
     
     cJSON *sta, *ap, *root = cJSON_CreateObject();
@@ -75,8 +75,8 @@ esp_err_t _rmgmt_get_network_wifi_status(httpd_req_t *req) {
     return ESP_OK;
 }
 
-esp_err_t _rmgmt_put_network_wifi_status(httpd_req_t *req) {
-    APPLY_HEADERS(req);
+esp_err_t _rmgmt_post_network_wifi_status(httpd_req_t *req) {
+    ALLOW_CORS(req);
 
     httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Not implemented");
     return ESP_OK;
