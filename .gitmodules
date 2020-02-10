@@ -1,4 +1,0 @@
-[submodule "wifimanager"]
-	path = example/components/wifimanager
-	url = https://github.com/AlbertWDev/wifimanager.git
-	branch = master
