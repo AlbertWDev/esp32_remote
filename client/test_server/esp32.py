@@ -21,7 +21,8 @@ def get_system_info():
         },
         'idf': 'v0.0-test',
         'hostname': 'test_server',
-        'mac': 'FF:FF:FF:00:00:00'
+        'mac': 'FF:FF:FF:00:00:00',
+        'time': 0
     })
 
 @app.route('/v1/system/ram', methods=['GET'])
@@ -279,4 +280,4 @@ def delete_system_partitions_label(label):
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0')
