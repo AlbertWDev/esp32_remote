@@ -167,6 +167,54 @@
 <script type="text/javascript">
     var SystemPartitions = class {
         constructor() {
+            this.bootAction = (partition) => {
+                this.setBoot(partition);
+            }
+
+            this.uploadAction = (partition) => {
+                var input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.bin';
+                input.onchange = e => {
+                    var file = e.target.files[0];
+
+                    this.upload(partition.label(), file);
+                }
+                input.click();
+            }
+
+            this.eraseAction = (partition) => {
+                system_partitions_erase.updateContent(partition);
+                $('#system-partitions__erase')[0].showModal();
+            }
+
+            this.otaFileAction = (self, evt) => {
+                $('#system-partitions-ota__file-name')[0].value = evt.target.files[0].name;
+                $('#system-partitions-ota__upload').prop('disabled', false);
+            }
+
+            this.otaUploadAction = () => {
+                $("#system-partitions-ota__upload").prop('disabled', true);
+                var file = $("#system-partitions-ota__file")[0].files[0];
+                var setBoot = $("#system-partitions-ota__boot").prop('checked');
+                if(file) {
+                    this.upload(null, file,
+                    (uploaded_partition) => {
+                        $("#system-partitions-ota__upload").prop('disabled', false);
+                        if(setBoot) {
+                            var partition = this.partitions().find(partition => partition.label() == uploaded_partition.label);
+                            if(partition)
+                                this.setBoot(partition);
+                            else
+                                console.log("Error: Uploaded partition is not in the list")
+                        }
+                    },
+                    (error) => {
+                        $("#system-partitions-ota__upload").prop('disabled', false);
+                    });
+                }
+            }
+
             componentHandler.upgradeElements($('.mdl-js-checkbox').get());
 
             this.endpoint = '/system/partitions';
@@ -251,54 +299,6 @@
             api_request(`${this.endpoint}/${partition.label()}`, 'DELETE').done(() => {
                 
             });
-        }
-
-        bootAction = (partition) => {
-            this.setBoot(partition);
-        }
-
-        uploadAction = (partition) => {
-            var input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.bin';
-            input.onchange = e => {
-                var file = e.target.files[0];
-
-                this.upload(partition.label(), file);
-            }
-            input.click();
-        }
-
-        eraseAction = (partition) => {
-            system_partitions_erase.updateContent(partition);
-            $('#system-partitions__erase')[0].showModal();
-        }
-
-        otaFileAction = (self, evt) => {
-            $('#system-partitions-ota__file-name')[0].value = evt.target.files[0].name;
-            $('#system-partitions-ota__upload').prop('disabled', false);
-        }
-
-        otaUploadAction = () => {
-            $("#system-partitions-ota__upload").prop('disabled', true);
-            var file = $("#system-partitions-ota__file")[0].files[0];
-            var setBoot = $("#system-partitions-ota__boot").prop('checked');
-            if(file) {
-                this.upload(null, file,
-                (uploaded_partition) => {
-                    $("#system-partitions-ota__upload").prop('disabled', false);
-                    if(setBoot) {
-                        var partition = this.partitions().find(partition => partition.label() == uploaded_partition.label);
-                        if(partition)
-                            this.setBoot(partition);
-                        else
-                            console.log("Error: Uploaded partition is not in the list")
-                    }
-                },
-                (error) => {
-                    $("#system-partitions-ota__upload").prop('disabled', false);
-                });
-            }
         }
     }
 

@@ -14,6 +14,10 @@
 
         <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js"></script>
+
+        <!-- dialog-polyfill -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dialog-polyfill/0.5.0/dialog-polyfill.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dialog-polyfill/0.5.0/dialog-polyfill.min.js"></script>
         
         <!-- MATERIAL DESIGN -->
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
@@ -106,13 +110,13 @@
                         <div class="mdl-layout-spacer"></div>
                         <span id="connection-ip" class="drawer-connection-ip">Not connected</span>
                         <div class="mdl-layout-spacer"></div>
-                        <button id="connect-board" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon">
+                        <button id="connect-board" class="mdl-button mdl-js-button mdl-button--icon">
                             <i class="material-icons" role="presentation">add_box</i>
                             <span class="visuallyhidden">Connect</span>
                         </button>
                         <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="connect-board">
                             <!-- ko foreach: connections -->
-                            <li data-bind="html: ConnectionManager.connectionToReadable($data), click: (conn) => {$root.connect(conn); $root.addConnection(conn);}" class="mdl-menu__item"></li>
+                            <li data-bind="html: $root.connectionToReadable($data), click: (conn) => {$root.connect(conn); $root.addConnection(conn);}" class="mdl-menu__item"></li>
                             <!-- /ko -->
                             <li class="mdl-menu__item" onclick="$('#connection-add')[0].showModal();"><i class="material-icons">add</i>New connection</li>
                         </ul>
@@ -188,6 +192,28 @@
 
         class ConnectionManager {
             constructor() {
+                this.connectionToReadable = (connection) =>
+                    `${connection.type == 'https' ? '<i class="material-icons https-icon" role="presentation">https</i> ' : ''}${connection.ip}:${connection.port}`;// [v${connection.version}]`;
+                this.connect = (connection) => {
+                    this.currentConn = connection;
+                    $('#connection-ip').html(this.connectionToReadable(this.currentConn));
+                    if(onConnect) onConnect();
+                }
+                this.addConnection = (connection) => {
+                    // Avoid repeated connections
+                    var existing = this.connections().find((c) => JSON.stringify(c) === JSON.stringify(connection));
+                    if(existing)
+                        this.connections.remove(existing);
+
+                    // Add connection to beginning of the list
+                    this.connections.unshift(connection);
+                    
+                    // Limit maximum number of connections
+                    while(this.connections().length > 3) this.connections.pop();
+
+                    this.saveConnections();
+                }
+
                 this.currentConn = null;
 
                 this.connections = ko.observableArray();
@@ -195,10 +221,6 @@
                 if(this.connections().length > 0)
                     this.connect(this.connections()[0]);
             }
-            
-            static connectionToReadable = (connection) =>
-                `${connection.type == 'https' ? '<i class="material-icons https-icon" role="presentation">https</i> ' : ''}${connection.ip}:${connection.port}`;// [v${connection.version}]`;
-            
 
             loadConnections() {
                 var cookie = decodeURIComponent(document.cookie)
@@ -209,21 +231,6 @@
                 if(cookie)
                     ko.utils.arrayPushAll(this.connections,
                         JSON.parse(cookie.trimStart().substring(CONNECTIONS_COOKIE_NAME.length, cookie.length)))
-            }
-
-            addConnection = (connection) => {
-                // Avoid repeated connections
-                var existing = this.connections().find((c) => JSON.stringify(c) === JSON.stringify(connection));
-                if(existing)
-                    this.connections.remove(existing);
-
-                // Add connection to beginning of the list
-                this.connections.unshift(connection);
-                
-                // Limit maximum number of connections
-                while(this.connections().length > 3) this.connections.pop();
-
-                this.saveConnections();
             }
 
             saveConnections() {
@@ -238,12 +245,6 @@
 
             isConnected() {
                 return this.currentConn != null;
-            }
-
-            connect = (connection) => {
-                this.currentConn = connection;
-                $('#connection-ip').html(ConnectionManager.connectionToReadable(this.currentConn));
-                if(onConnect) onConnect();
             }
         }
 
@@ -398,12 +399,10 @@
             ko.applyBindings(connection_manager, $('#drawer-connection-container')[0]);
             ko.applyBindings(new ConnectionManager_AddDialog(), $('#connection-add')[0]);
 
-
             // Change content when hash location changes
             $(window).on('hashchange', function() {
                 changeContent(window.location.hash.substring(1));
             });
-
             // If URI has hashLocation, update content
             if(window.location.hash) {
                 changeContent(window.location.hash.substring(1));

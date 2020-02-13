@@ -84,7 +84,7 @@
                     </div>
                 </td>
                 <td class="storage-header-menu">
-                    <button id="storage-header-menu-button" class="storage-header-button mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon">
+                    <button id="storage-header-menu-button" class="storage-header-button mdl-button mdl-js-button mdl-button--icon">
                         <i class="material-icons storage-header-icon" role="presentation">more_vert</i>
                     </button>
                     <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="storage-header-menu-button">
@@ -154,7 +154,7 @@
             .mdl-button--fab-expandable,.mdl-button--fab-expandable *{z-index:99999}.mdl-button--fab-expandable.is-active>.mdl-fab-expandable--children{display:block!important}.mdl-button--fab-expandable.bottom>.mdl-fab-expandable--children{display:none;position:absolute;bottom:56px;left:8px}.mdl-button--fab-expandable.top>.mdl-fab-expandable--children{display:none;position:absolute;top:56px;left:8px}.mdl-button--fab-expandable.bottom .mdl-fab-expandable--child{position:relative;margin-bottom:16px}.mdl-button--fab-expandable.top .mdl-fab-expandable--child{position:relative;margin-top:16px}.mdl-fab-expandable--children .mdl-fab-expandable--child-label{min-width:200px}.mdl-fab-expandable--child-label>*{font-size:14px;font-weight:700;line-height:1;background-color:#fff;padding:8px;border-radius:8px}.mdl-button--fab-expandable.left .mdl-fab-expandable--child-label{position:absolute;left:48px;top:10px;text-align:left}.mdl-button--fab-expandable.right .mdl-fab-expandable--child-label{position:absolute;right:48px;top:10px;text-align:right}
         </style>
         <div class="mdl-fab-bottom-right mdl-button--fab-expandable bottom right" onclick="$(this).toggleClass('is-active')">
-            <button class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored">
+            <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored">
                 <i class="material-icons">add</i>
             </button>
             <div class="mdl-fab-expandable--children">
@@ -194,6 +194,52 @@
     
     var Storage = class {
         constructor() {
+            this.getPath = (path_array) => path_array ? path_array.join('/') + '/' : this.currentPath().join('/') + '/';
+
+            this.nodeAction = (node) => {
+                if(node.isDir()) {
+                    this.changeLocation(this.currentPath().concat([node.name()]));
+                    //this.currentPath.push(node.name());
+                    //this.refresh();
+                } else {
+                    // Create an invisible A element
+                    const a = document.createElement("a");
+                    a.style.display = "none";
+                    document.body.appendChild(a);
+
+                    a.href = connection_manager.getUri(this.endpoint + this.getPath() + node.name());
+                    // Use download attribute to set set desired file name
+                    a.setAttribute("download", node.name());
+
+                    // Trigger the download by simulating click
+                    a.click();
+
+                    // Cleanup
+                    window.URL.revokeObjectURL(a.href);
+                    document.body.removeChild(a);
+                }
+            }
+            this.pathUpAction = () => {
+                this.changeLocation(this.currentPath.slice(0, -1));
+            }
+            this.pathClickAction = (dir_name) => {
+                this.changeLocation(this.currentPath.slice(0, this.currentPath().indexOf(dir_name)+1));
+            }
+            this.uploadFileAction = () => {
+                var input = document.createElement('input');
+                input.type = 'file';
+                input.onchange = e => {
+                    // TODO: Upload multiple files
+                    var file = e.target.files[0];
+
+                    this.upload(this.getPath() + file.name, file);
+                }
+                input.click();
+            }
+            this.createDirAction = () => {
+
+            }
+
             this.endpoint = '/storage';
             this.currentPath = ko.observableArray(['']);
             this.nodes = ko.observableArray();
@@ -201,7 +247,6 @@
             setOnConnectCallback(() => storage.refresh());
             this.refresh();
         }
-        getPath = (path_array) => path_array ? path_array.join('/') + '/' : this.currentPath().join('/') + '/';
 
         timestampToReadable(timestamp) {
             if(isNaN(timestamp)) return "-";
@@ -276,49 +321,6 @@
 
         }
 
-        nodeAction = (node) => {
-            if(node.isDir()) {
-                this.changeLocation(this.currentPath().concat([node.name()]));
-                //this.currentPath.push(node.name());
-                //this.refresh();
-            } else {
-                // Create an invisible A element
-                const a = document.createElement("a");
-                a.style.display = "none";
-                document.body.appendChild(a);
-
-                a.href = connection_manager.getUri(this.endpoint + this.getPath() + node.name());
-                // Use download attribute to set set desired file name
-                a.setAttribute("download", node.name());
-
-                // Trigger the download by simulating click
-                a.click();
-
-                // Cleanup
-                window.URL.revokeObjectURL(a.href);
-                document.body.removeChild(a);
-            }
-        }
-        pathUpAction = () => {
-            this.changeLocation(this.currentPath.slice(0, -1));
-        }
-        pathClickAction = (dir_name) => {
-            this.changeLocation(this.currentPath.slice(0, this.currentPath().indexOf(dir_name)+1));
-        }
-        uploadFileAction = () => {
-            var input = document.createElement('input');
-            input.type = 'file';
-            input.onchange = e => {
-                // TODO: Upload multiple files
-                var file = e.target.files[0];
-
-                this.upload(this.getPath() + file.name, file);
-            }
-            input.click();
-        }
-        createDirAction = () => {
-
-        }
         delete(node) {
             api_request(`${this.endpoint}/${network.ssid()}`, 'DELETE').done((deleted_network) => {
                 this.networks.remove(network);
