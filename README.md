@@ -2,12 +2,49 @@
 
 REST API used to manage an Esp32 board remotely.
 
+It is provided as an `esp-idf` component that initializes an HTTPS server for communication.
+___
+## Usage
+
+1. [Create an esp-idf project](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/#creating-your-first-project)
+2. In the project folder, create a `components` folder and clone this repository inside.
+    ```
+    mkdir components
+    cd components
+    git clone --recursive https://github.com/AlbertWDev/esp32_remote.git
+    ```
+    > If you forgot the `--recursive` flag, move into the `components/esp32_remote` folder and use:
+    > ```
+    > git submodule update --init --recursive
+    > ```
+    > This is required since `esp32_remote` depends on the [`wifimanager` library](https://github.com/AlbertWDev/wifimanager).
+3. In your `main.c` file, include the header and initialize the remote  management server. It will start itself automatically when the board is connected to an AP.
+    ```
+    #include "wifi_manager.h"
+    #include "remote_management.h"
+
+    void app_main() {
+        rmgmt_init(NULL, NULL, 0);
+
+        wm_config_t wm_config = {
+            .ap_ssid = "esp32_testing",
+            .ap_password = "4321gnitset",
+            .version = 0x01
+        };
+        wm_init(&wm_config);
+    }
+    ```
+
+This is the basic setup for the project. Notice that it doesn't provide SSL certs, so the server will use plain HTTP. An advanced example is provided in the [`example` folder](https://github.com/AlbertWDev/esp32_remote/tree/master/example), which uses self-signed certificates and includes an additional endpoint on initialization.
+
 ___
 ## WEB INTERFACE
 
-A web client is provided to interact with the API.
+A web client is provided to interact with the API. You can use the local files under the [`client` folder](https://github.com/AlbertWDev/esp32_remote/tree/master/client) or the hosted version:
 
 > [Esp32 Remote Management](https://albertwdev.github.io/esp32_remote/client)
+
+Once the board is connected, add it using the menu on the left. You should then be able to see its details and navigate through its configuration.
 
 ___
 ## API RESOURCES
