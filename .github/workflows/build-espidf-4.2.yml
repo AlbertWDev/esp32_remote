@@ -34,6 +34,10 @@ jobs:
       with:
         submodules: recursive
 
+    - name: Prepare example certs
+      run: make
+      working-directory: ${{ env.example-path }}/main/certs
+
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v1
       with:
