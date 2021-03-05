@@ -1,5 +1,7 @@
 # Esp32 Remote Management API
 
+[![Build (ESP-IDF v4.2)](https://github.com/AlbertWDev/esp32_remote/actions/workflows/build-espidf-4.2.yml/badge.svg)](https://github.com/AlbertWDev/esp32_remote/actions/workflows/build-espidf-4.2.yml)
+
 REST API used to manage an Esp32 board remotely.
 
 It is provided as an `esp-idf` component that initializes an HTTPS server for communication.

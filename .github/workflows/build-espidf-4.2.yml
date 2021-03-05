@@ -1,0 +1,50 @@
+name: "Build (ESP-IDF v4.2)"
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    container: espressif/idf:v4.2
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [cpp]
+    
+    env:
+      example-path: example
+
+    steps:
+    - name: Update Git
+      run: |
+        apt update
+        apt install -y software-properties-common
+        add-apt-repository -y ppa:git-core/ppa
+        apt install -y git
+
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v1
+      with:
+        languages: ${{ matrix.language }}
+        queries: security-and-quality
+    
+    - name: Build example
+      run: |
+        . ${IDF_PATH}/export.sh
+        cd ${{ env.example-path }}
+        idf.py build
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v1
